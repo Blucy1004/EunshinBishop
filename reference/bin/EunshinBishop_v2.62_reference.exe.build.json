@@ -1,0 +1,20 @@
+﻿{
+    "schema":  1,
+    "built_utc":  "2026-07-18T03:31:36.0608988Z",
+    "source":  "C:\\Users\\fly_t\\Downloads\\SniperBishop\\EunshinBishop_Phase5_Q\\reference\\source\\SniperBishop_v2.62_Phase5_FIRSTNET_v5.cpp",
+    "source_sha256":  "F2C81769951B936D82D5A5B4F4A8BD56AAC28AE258F983578371101F16328A9E",
+    "executable":  "C:\\Users\\fly_t\\Downloads\\SniperBishop\\EunshinBishop_Phase5_Q\\reference\\bin\\EunshinBishop_v2.62_reference.exe",
+    "executable_sha256":  "AFD22FAA10F93F28913E655BA5380BF8A637F37A51AB46F32B04BE1F7183BB3A",
+    "compiler":  "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Tools\\MSVC\\14.51.36231\\bin\\Hostx64\\x64\\cl.exe",
+    "compiler_file_version":  "19.51.36248.0",
+    "configuration":  "Release",
+    "flags":  [
+                  "/nologo",
+                  "/std:c++17",
+                  "/EHsc",
+                  "/W4",
+                  "/O2",
+                  "/DNDEBUG",
+                  "/DSNIPER_SOURCE_HASH=\\\"F2C81769951B936D82D5A5B4F4A8BD56AAC28AE258F983578371101F16328A9E\\\""
+              ]
+}
