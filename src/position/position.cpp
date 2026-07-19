@@ -128,7 +128,7 @@ int Position::fullmoveNumber() const noexcept {
 }
 
 std::uint8_t Position::castlingRights() const noexcept {
-    return state_ ? state_->castlingRights : NoCastling;
+    return state_ ? state_->castlingRights : static_cast<std::uint8_t>(NoCastling);
 }
 
 Square Position::epSquare() const noexcept {

@@ -1,0 +1,13 @@
+build/
+build-*/
+out/
+*.obj
+*.o
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.ninja_log
+CMakeCache.txt
+CMakeFiles/
+.vs/
