@@ -47,7 +47,7 @@ binary.
 - Pure classical evaluation strengthening has not started.
 - SEEPruning and LIMBO default to off; no strength evidence exists for
   turning them on.
-- Outbound source and network-weight licenses are undecided (see LICENSE).
+- Repository source and documentation are GPL-3.0-or-later. Network weights are excluded and require a separate outbound license.
 
 See CHANGELOG.md for the full list of what changed.
 ```
@@ -127,7 +127,7 @@ Promote `v5.0.0-rc.1` to stable `v5.0.0` only after:
    confidence interval).
 3. No severe regression or crash found in that regression; if one is found,
    fix the RC and re-run rather than shipping stable.
-4. Source and network licenses finalized and `LICENSE` replaced with real
+4. Source license finalized as GPL-3.0-or-later; network weights remain excluded until separately licensed
    text.
 5. At least one full GCC and one full Clang build verified green in CI, not
    just configured.

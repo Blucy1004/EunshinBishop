@@ -12,6 +12,8 @@ is still missing before any `v5.0.0` tag.
 
 ### Added
 
+- GPL-3.0-or-later licensing and a non-binding upstream-sharing request for stronger forks.
+
 - Q Architecture: a modular from-scratch reimplementation of the frozen
   single-file `EunshinBishop`/`SniperBishop` v2.62 reference, split into
   `core`, `position`, `engine`, `eval`, `search`, and `uci` modules with an
@@ -48,6 +50,8 @@ is still missing before any `v5.0.0` tag.
 
 ### Changed
 
+- Added an internal search/probe `doMove` path that invalidates child NNUE cache metadata without copying the ~2 KiB accumulator; public/game-state calls retain the existing byte-preserving contract.
+
 - Replaced the reference's contextual-castle/EP integer move encoding with
   the explicit typed `Move` above.
 - Replaced the reference's piece-type-only board array with a `Piece`
@@ -71,5 +75,5 @@ is still missing before any `v5.0.0` tag.
   etc.) has not started; see `docs/ClassicalEvalBacklog.md`.
 - Only MSVC has been built and tested; GCC and Clang builds have not been
   run on any machine yet.
-- The outbound source and network-weight licenses are undecided; see
-  `LICENSE`.
+- Repository source and documentation are licensed under GPL-3.0-or-later. FIRST_NET v5
+  network weights remain excluded pending a separate weight-file license.

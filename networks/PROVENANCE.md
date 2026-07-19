@@ -7,8 +7,8 @@ task.
 
 The project owner states that `firstnet_v5_10b.snnue` is their own trained
 network and that its training source was the public Lichess database they
-identify as CC0-licensed.  The owner explicitly authorized placing this
-network inside the EunshinBishop Phase 5 Q project.
+identify as CC0-licensed. The weight file is intentionally not distributed
+from the public repository until an outbound weight license is chosen.
 
 This file records that statement; it does not invent an upstream URL, database
 snapshot date, extraction command, teacher configuration, training seed, or
@@ -29,7 +29,7 @@ role      teacher-minus-classical residual correction
 
 - The owner's statement identifies the source database as CC0.
 - The trained binary is identified as the owner's original network.
-- The owner authorized bundling the binary in this project.
+- The weight file is retained only in the owner's private/local environment.
 - A public release must still name the license the owner grants specifically
   for the trained weight file; the dataset's CC0 status does not automatically
   choose that outbound weight license.

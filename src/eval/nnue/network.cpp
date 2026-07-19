@@ -60,7 +60,6 @@ constexpr std::uint64_t OUTPUT_WEIGHT_BYTES =
 constexpr std::uint64_t OUTPUT_BIAS_BYTES = 4;
 constexpr std::uint64_t PAYLOAD_BYTES =
     FT_WEIGHT_BYTES + FT_BIAS_BYTES + OUTPUT_WEIGHT_BYTES + OUTPUT_BIAS_BYTES;
-constexpr std::uint64_t FILE_BYTES = HEADER_BYTES + DIRECTORY_BYTES + PAYLOAD_BYTES;
 constexpr std::size_t MAX_PATH_BYTES = 32768;
 
 enum ElementType : std::uint16_t {
@@ -725,11 +724,11 @@ using WideAccumulator = std::array<std::int64_t, HIDDEN>;
     const WideAccumulator& white,
     const WideAccumulator& black) noexcept {
     std::int64_t raw = parameters.outputBias;
-    for (int hidden = 0; hidden < HIDDEN; ++hidden) {
+    for (std::size_t hidden = 0; hidden < static_cast<std::size_t>(HIDDEN); ++hidden) {
         const std::int64_t whiteActivation = std::clamp<std::int64_t>(
-            white[static_cast<std::size_t>(hidden)], 0, QUANTIZATION_SCALE);
+            white[hidden], 0, QUANTIZATION_SCALE);
         const std::int64_t blackActivation = std::clamp<std::int64_t>(
-            black[static_cast<std::size_t>(hidden)], 0, QUANTIZATION_SCALE);
+            black[hidden], 0, QUANTIZATION_SCALE);
         raw += whiteActivation * parameters.outputWeights[hidden];
         raw += blackActivation * parameters.outputWeights[HIDDEN + hidden];
     }
@@ -744,7 +743,7 @@ using WideAccumulator = std::array<std::int64_t, HIDDEN>;
         (rights & BlackKingSide) != 0 ? QUANTIZATION_SCALE : 0,
         (rights & BlackQueenSide) != 0 ? QUANTIZATION_SCALE : 0
     };
-    for (int lane = 0; lane < CONTEXTS; ++lane) {
+    for (std::size_t lane = 0; lane < static_cast<std::size_t>(CONTEXTS); ++lane) {
         raw += static_cast<std::int64_t>(context[lane])
              * parameters.outputWeights[2 * HIDDEN + lane];
     }
@@ -1184,7 +1183,7 @@ AccumulatorCheck Network::verifyAccumulator(Position& position) const noexcept {
     }
 
     for (int perspective = 0; perspective < COLOR_NB; ++perspective) {
-        for (int hidden = 0; hidden < HIDDEN; ++hidden) {
+        for (std::size_t hidden = 0; hidden < static_cast<std::size_t>(HIDDEN); ++hidden) {
             const std::int64_t incremental =
                 state->accumulator.values[static_cast<std::size_t>(perspective)]
                                          [static_cast<std::size_t>(hidden)];
@@ -1192,7 +1191,7 @@ AccumulatorCheck Network::verifyAccumulator(Position& position) const noexcept {
                 scratch[perspective][static_cast<std::size_t>(hidden)];
             if (incremental != expected) {
                 result.mismatchPerspective = perspective;
-                result.mismatchNeuron = hidden;
+                result.mismatchNeuron = static_cast<int>(hidden);
                 result.incrementalValue = incremental;
                 result.scratchValue = expected;
                 return result;

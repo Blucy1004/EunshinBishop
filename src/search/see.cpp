@@ -94,7 +94,7 @@ Value see(const Position& position, Move move) noexcept {
     Position scratch = position.snapshotForSearch(rootState);
     std::array<StateInfo, MAX_EXCHANGE_PLY> states{};
 
-    if (!scratch.doMove(move, states[1]))
+    if (!scratch.doMove(move, states[1], false))
         return gain[0];
 
     // `attacker` is the piece now occupying `target`, about to potentially
@@ -129,7 +129,7 @@ Value see(const Position& position, Move move) noexcept {
             if (depth + 1 >= MAX_EXCHANGE_PLY) break;
             const Candidate& candidate = candidates[i];
             StateInfo& nextState = states[static_cast<std::size_t>(depth + 1)];
-            if (!scratch.doMove(candidate.move, nextState))
+            if (!scratch.doMove(candidate.move, nextState, false))
                 continue; // Pinned or otherwise illegal: try the next attacker.
 
             attacker = candidate.move.isPromotion()

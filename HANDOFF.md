@@ -1,3 +1,11 @@
+# Checkpoint 9 public-candidate update
+
+- Source/documentation license: GPL-3.0-or-later.
+- FIRST_NET v5 weights: separate license; do not redistribute without one.
+- Internal search/probe moves skip copying invalid child accumulator bytes; public game-state moves preserve the prior contract.
+- No performance or Elo claim is made until target-machine reruns.
+- The prior 0-6 six-game smoke result remains a release-strength warning.
+
 # EunshinBishop Q -- handoff status
 
 Last updated: 2026-07-19. This file is the single source of truth for "what
@@ -115,7 +123,7 @@ fdfcbc6  src/engine/engine.{h,cpp}, src/uci/uci.cpp, docs/ABTesting.md,
 3af0c60  docs/Checkpoint7_Report.md, docs/{ABResults,Checkpoint6_Report,
          Build}.md updates, reference/ab_tests/checkpoint7_root_cause/** --
          the root-cause investigation itself (no source changes)
-(uncommitted at time of writing -- commit before ending the session)
+(historical note from Checkpoint 8; superseded by this public-candidate package)
          CMakeLists.txt (/MT CRT-linkage flag-comparability fix),
          src/position/position.cpp (removed the redundant StateInfo
          zero-init in Position::doMove), docs/Checkpoint8_Report.md,
@@ -258,3 +266,28 @@ agreement.
 5. Do not push a `v*` tag or create a GitHub remote/release until the
    regression above is resolved and `docs/Build.md`'s RC-relevant checklist
    rows are checked with evidence linked from a checkpoint report.
+
+
+## Final-audit remediation and Checkpoint 9 public-candidate package
+
+- Public source tree no longer carries the private `.snnue` weight copies.
+- `.gitignore` prevents accidental re-addition until an outbound weight license exists.
+- Release `publish` job now declares `contents: write`.
+- Build CI now truthfully tests a repository checkout with no network present.
+- Clang conversion/unused-constant warnings in `network.cpp` were removed.
+- `.gitattributes` fixes line-ending policy.
+- `docs/Build.md` and `docs/CIVerificationChecklist.md` now reflect Checkpoint 8.
+- Source license is now GPL-3.0-or-later and a fresh paired A/B smoke test was completed. The test failed 0-6, so the remaining release blocker is the unresolved playing-strength regression (see `docs/Checkpoint9_Report.md`).
+
+## Checkpoint 9 update
+
+- Source code and documentation license finalized as GPL-3.0-or-later (`LICENSE`).
+- FIRST_NET v5 weight files remain excluded and require a separate license.
+- Post-optimization classical-only paired smoke test completed: Q 0W-6L-0D
+  against the frozen v2.62 reference, with three opening pairs and colors
+  swapped. All games ended by legal checkmate; no technical losses.
+- The test satisfies the requirement to execute a fresh paired A/B set, but it
+  **fails the playing-strength release gate**. See `docs/Checkpoint9_Report.md`
+  and `reference/ab_tests/checkpoint9_release_gate/`.
+- Do not create or push a release tag until the search-strength regression is
+  isolated and fixed.

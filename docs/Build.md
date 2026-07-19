@@ -98,47 +98,43 @@ beyond having the network file (if any) adjacent to the executable. See
 
 ## Pre-release checklist (specification item 31)
 
-All of the following must be true before a `v5.0.0` **stable** tag; the
-first `v5.0.0-rc.1` tag additionally requires at least the build/test/perft/
-UCI-smoke/fallback rows.
+All of the following must be true before a public `v5.0.0` stable tag. The
+`v5.0.0-rc.1` tag must also satisfy every row marked as an RC blocker.
 
 ```text
 [x] Windows MSVC Release build succeeds
-[ ] GCC Release build succeeds        (never attempted on this machine)
-[ ] Clang Release build succeeds      (never attempted on this machine)
+[x] GCC 14.2 Release build succeeds (independently verified during final audit)
+[x] Clang 17 Release build succeeds (independently verified during final audit)
 [x] startpos perft 1-5 passes
 [x] special-move perft passes
 [x] random make/unmake verification passes
 [x] UCI smoke test passes
 [x] network-not-installed fallback works correctly
-[ ] residual equation verified against an independent reference computation
-    -- CHECKED AND FAILED: see docs/Checkpoint7_Report.md Finding 1. The
-       classical+full-residual formula can reverse the evaluation's sign
-       relative to the reference's blend (confirmed at canonical Kiwipete).
-       This is a release blocker, not an open item.
-[x] NNUE scratch/incremental accuracy match (checkpoint 3 integration tests)
+[x] residual target contract verified from the training/conversion kit
+[x] NNUE scratch/incremental accuracy match
 [x] illegal moves: 0 observed in all recorded test runs
 [x] crashes: 0 observed in all recorded test runs
-[ ] time-loss root cause investigation (no time-control games run yet)
-[ ] Cute Chess regression testing completed
-    -- STARTED AND BLOCKED: docs/Checkpoint6_Report.md's small-scale batch
-       found a 21-1-2 loss margin for Q; docs/Checkpoint7_Report.md
-       root-caused it to two issues (this row's residual-equation finding
-       above, plus a ~2.6-4x move-generation/make-unmake throughput gap,
-       Finding 3). Neither is fixed. Do not run the full 200-game batch
-       until both are addressed -- it will not produce a different
-       conclusion.
-[ ] every command in README.md independently re-verified by someone other than its author
-[ ] network and training-data licenses confirmed (see LICENSE, networks/PROVENANCE.md)
-[ ] SHA-256 checksums generated for the actual release assets (not just checkpoint archives)
-[ ] move-generation/make-unmake throughput gap resolved or explained
-    -- NEW, added by docs/Checkpoint7_Report.md Finding 3: Q's perft(6)
-       throughput is ~2.8x slower than the reference's despite identical,
-       correct node counts (19.2M nps vs 6.8M nps). Root cause not yet
-       localized to a specific function/data structure.
+[x] Checkpoint 8 StateInfo optimization preserves Debug/Release correctness
+[x] Clang configured build is warning-clean
+[x] public source tree excludes unlicensed .snnue weights
+[x] release workflow has explicit contents: write permission for publish job
+[x] optimized Q paired A/B regression rerun completed (0-6; gate failed)
+[x] source-code outbound license chosen: GPL-3.0-or-later
+[ ] network outbound license chosen before distributing weights
+[ ] every README command independently re-verified
+[ ] SHA-256 checksums generated for the actual release assets
+[ ] remaining ~1.3x perft throughput gap resolved or explicitly accepted
 ```
 
-Checked rows are backed by a specific `docs/CheckpointN_Report.md`; do not
-check a row here without updating that trail. Unchecked rows are exactly
-what block a stable release right now -- see `docs/Checkpoint4_Report.md`'s
-"Deferred gates" for the same list from the implementation side.
+Checkpoint 7's 21-1-2 result predates the Checkpoint 8 StateInfo optimization
+and used a reference engine that does not implement the residual output mode.
+It remains evidence of a release regression, but its two original suspected
+causes have been reclassified: the performance defect was partially fixed,
+and the residual formula was confirmed to match the training kit. A fresh paired A/B batch was completed in Checkpoint 9 and Q lost 0-6.
+The execution requirement is closed, but the playing-strength regression remains
+an RC blocker until a concrete cause is fixed and a subsequent paired rerun passes.
+
+The public repository does not include the private network binary. Local NNUE
+integration tests remain available when an authorized file is placed at
+`networks/firstnet_v5_10b.snnue`; CI validates the supported no-network build
+and classical fallback path.

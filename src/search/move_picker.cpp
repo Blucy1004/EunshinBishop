@@ -144,7 +144,7 @@ bool givesCheckForOrdering(const Position& position, Move move) noexcept {
 // use the post-move board. This covers discovered checks and occupancy changes.
 bool givesCheckExact(Position& position, Move move) noexcept {
     StateInfo next;
-    if (!position.doMove(move, next)) return false;
+    if (!position.doMove(move, next, false)) return false;
     const bool result = position.inCheck();
     position.undoMove(move);
     return result;

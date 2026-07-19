@@ -1,0 +1,28 @@
+{
+  "games": 6,
+  "Q_wins": 0,
+  "Q_losses": 6,
+  "draws": 0,
+  "Q_score": 0.0,
+  "conditions": {
+    "platform": "Linux x86_64",
+    "compiler": "GCC 14.2.0",
+    "build": "Release -O3 -DNDEBUG",
+    "hash_mib": 64,
+    "use_nnue": false,
+    "movetime_ms": 50,
+    "IIR": false,
+    "AEGIS": false,
+    "SEEPruning": false,
+    "LIMBO": false,
+    "opening_pairs": 3,
+    "color_swapped": true
+  },
+  "terminations": {
+    "checkmate": 6,
+    "crash": 0,
+    "timeout": 0,
+    "illegal_move": 0
+  },
+  "interpretation": "Release-gate smoke test only; sample is too small for Elo. The optimized Q still shows a severe classical-only playing-strength regression versus the frozen reference under this fast time control."
+}

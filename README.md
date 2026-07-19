@@ -50,9 +50,10 @@ hashes for every reported binary.
 the frozen reference at Kiwipete depths 6/8/10: the two searches agree at
 depth 6 and diverge past it by design (a different search algorithm and a
 different, residual-correction NNUE equation), which is evidence about the
-current gap, not a strength or equivalence claim. No paired-game or
-time-control testing has been run for either engine, or for `SEEPruning=true`
-/ `LIMBO=true`. See `docs/Build.md` for the full pre-release checklist and
+current gap, not a strength or equivalence claim. A six-game classical-only paired smoke test was run after Checkpoint 8; Q
+scored 0-6 against the frozen reference under a 50 ms-per-move fast control.
+This is not enough for Elo, but it fails the release gate. `SEEPruning=true`
+and `LIMBO=true` still lack strength testing. See `docs/Build.md` for the full pre-release checklist and
 exactly what is still missing before any `v5.0.0` tag.
 
 ## 4. Supported platforms
@@ -60,7 +61,7 @@ exactly what is still missing before any `v5.0.0` tag.
 | Platform | Status |
 |---|---|
 | Windows x64 (MSVC) | Built and tested every checkpoint |
-| Linux x64 (GCC / Clang) | CI-scaffolded (`.github/workflows/build.yml`); not yet run on a physical machine |
+| Linux x64 (GCC / Clang) | GCC 14.2 and Clang 17 Release builds verified; no-network CTest passes |
 
 ## 5. Quick start
 
@@ -99,8 +100,7 @@ Place `firstnet_v5_10b.snnue` next to `EunshinBishop.exe`, or point
 `EvalFile` at another path via `setoption`. Without it, the engine falls back
 to classical evaluation and reports why via `info string`; it does not fail
 to start. See `networks/README.md` and `networks/PROVENANCE.md` for the
-network's provenance, and `LICENSE` for its still-undecided redistribution
-license.
+network's provenance, and `LICENSE` for its separate, currently unpublished redistribution license.
 
 ## 9. Key UCI options
 
@@ -123,7 +123,7 @@ ctest --test-dir build-vs -C Release --output-on-failure
 runs both `EunshinBishopQCoreTests` (perft, make/unmake, TT, MovePicker, SEE,
 ...) and `EunshinBishopQIntegrationTests` (evaluator, search, UCI). See
 `docs/Testing.md` for what each covers and what is intentionally not yet
-tested (time-control games, GCC/Clang builds).
+tested (longer time-control strength batches and optional-feature strength).
 
 Example of the kind of claim this project records instead of an unverified
 Elo number:
@@ -137,25 +137,30 @@ v2.62 reference: bestmove e2a6, score -15 cp, 101323 nodes
 
 ## 11. Known limitations
 
-- No Elo, paired-game, or search-equivalence claim for Q, in either
-  direction relative to the frozen reference.
+- No Elo or search-equivalence claim for Q. The only post-optimization paired
+  smoke test is 0-6 against the frozen reference and blocks the RC release.
 - Pure classical evaluation strengthening has not started
   (`docs/ClassicalEvalBacklog.md`).
 - `SEEPruning=true` and `LIMBO=true` are correctness-tested (legal PV, no
   crash) but not strength-tested; their defaults should not change without
   paired-game evidence.
-- Only MSVC has actually been built and tested; GCC/Clang builds are
-  CI-scaffolded but unverified.
+- GCC 14.2 and Clang 17 no-network Release builds are verified, but networked
+  Linux integration still depends on a separately supplied licensed weight file.
 - Lazy SMP / multi-threaded search is not implemented (`Threads` is not a
   UCI option).
 - `ponderhit`, `register`, and MultiPV are not implemented.
-- The outbound source and network-weight licenses are undecided; see
-  `LICENSE`.
+- The source code and documentation are GPL-3.0-or-later. FIRST_NET v5 network
+  weights remain separately licensed and are not distributed without an
+  explicit weight-file license.
 
 ## 12. License
 
-**Undecided.** See `LICENSE` -- it is a placeholder, not a grant, and states
-what the project owner still needs to decide before a public release.
+EunshinBishop source code and documentation are licensed under the GNU
+General Public License v3.0 or later (`GPL-3.0-or-later`). Modified versions
+may be used and distributed under the GPL, including commercially, but
+distributed derivative binaries must be accompanied by corresponding source
+under the same GPL terms. FIRST_NET v5 weight files are licensed separately
+and are not included unless an explicit weight-file license accompanies them.
 
 ## 13. Credits
 
@@ -164,8 +169,8 @@ what the project owner still needs to decide before a public release.
   (`reference/source`, `reference/README.md`).
 - FIRST_NET v5 network training data: the project owner identifies its
   source as the public Lichess database, CC0-licensed
-  (`networks/PROVENANCE.md`); the trained weight file's own outbound license
-  is a separate, still-undecided question.
+  (`networks/PROVENANCE.md`); the trained weight file requires a separate outbound license and is not
+  included in the public source tree.
 - Search and evaluation techniques reference commonly known chess
   programming ideas (staged move ordering, PVS, aspiration windows, SEE
   swap-list evaluation, NNUE-style residual correction); see

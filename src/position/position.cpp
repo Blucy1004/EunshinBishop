@@ -322,7 +322,7 @@ bool Position::isLegal(Move move) const noexcept {
     StateInfo rootCopy = *state_;
     probe.state_ = &rootCopy;
     StateInfo next;
-    return probe.doMove(move, next);
+    return probe.doMove(move, next, false);
 }
 
 Position Position::snapshotForSearch(StateInfo& rootState) const noexcept {
@@ -338,7 +338,8 @@ Position Position::snapshotForSearch(StateInfo& rootState) const noexcept {
     return snapshot;
 }
 
-bool Position::doMove(Move move, StateInfo& newState) noexcept {
+bool Position::doMove(Move move, StateInfo& newState,
+                      bool preserveAccumulator) noexcept {
     if (!state_ || &newState == state_ || !isPseudoLegal(move)) return false;
 
     StateInfo* const oldState = state_;
@@ -382,11 +383,16 @@ bool Position::doMove(Move move, StateInfo& newState) noexcept {
     newState.capturedSquare = capturedSquare;
     newState.nullMove = false;
     newState.checkers = EMPTY_BB;
-    // Preserve the accepted checkpoint-2 state-transition contract. The
-    // evaluator can update this copied storage incrementally from `previous`.
-    newState.accumulator = oldState->accumulator;
-    if (newState.accumulator.validMask != 0)
+    // Public/game-state callers preserve the historical byte-for-byte child
+    // accumulator contract. Internal search/probe callers may skip this ~2KB
+    // copy: the child is marked invalid, and NNUE::updateAccumulatorAfterMove
+    // copies the parent before applying deltas. Undo always restores oldState.
+    if (preserveAccumulator) {
+        newState.accumulator = oldState->accumulator;
         newState.accumulator.validMask = 0;
+    } else {
+        newState.accumulator.invalidate(oldState->accumulator.generation);
+    }
 
     state_ = &newState;
 

@@ -55,7 +55,8 @@ public:
     // the Engine's current StateInfo.
     [[nodiscard]] Position snapshotForSearch(StateInfo& rootState) const noexcept;
 
-    bool doMove(Move move, StateInfo& newState) noexcept;
+    bool doMove(Move move, StateInfo& newState,
+                bool preserveAccumulator = true) noexcept;
     void undoMove(Move move) noexcept;
     bool doNullMove(StateInfo& newState) noexcept;
     void undoNullMove() noexcept;
