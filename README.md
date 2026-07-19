@@ -117,17 +117,24 @@ to classical evaluation and reports why via `info string`; it does not fail
 to start. See `networks/README.md` and `networks/PROVENANCE.md` for the
 network's provenance, and `LICENSE` for its separate, currently unpublished redistribution license.
 
-## 9. Key UCI options
+## 9. UCI options
 
-| Option | Default | Meaning |
-|---|---:|---|
-| `Hash` | 256 | transposition table size, MiB |
-| `UseNNUE` | true | `false` uses the classical evaluator only |
-| `EvalFile` | `firstnet_v5_10b.snnue` | network path, resolved next to the executable |
-| `SEEPruning` | false | strict-SEE qsearch pruning; no strength evidence yet |
-| `LIMBO` | false | bounded frontier verification extension; no strength evidence yet |
+| Option | Type | Default | Range / Values | Description |
+|---|---|---:|---|---|
+| `Hash` | `spin` | `256` | `1–4096` | Sets the transposition table size in megabytes. |
+| `MoveOverhead` | `spin` | `30` | `0–5000` | Reserves extra time in milliseconds to compensate for GUI, operating system, or network delay. |
+| `UseNNUE` | `check` | `true` | `true`, `false` | Enables or disables NNUE evaluation. |
+| `EvalFile` | `string` | `firstnet_v5_10b.snnue` | File path | Specifies the NNUE network file to load. |
+| `NNUEOutputMode` | `combo` | `Residual` | `Residual`, `Absolute` | Selects how the NNUE output is combined with the classical evaluation. |
+| `ResidualScale` | `spin` | `100` | `0–200` | Controls the strength of the NNUE residual correction. |
+| `ResidualGuard` | `check` | `true` | `true`, `false` | Enables safety checks for unusually large or unstable residual corrections. |
+| `AbsoluteBlend` | `spin` | `35` | `0–100` | Controls the NNUE contribution when `NNUEOutputMode` is set to `Absolute`. |
+| `IIR` | `check` | `false` | `true`, `false` | Enables Internal Iterative Reduction. |
+| `AEGIS` | `check` | `false` | `true`, `false` | Enables Adaptive Evaluation Guard for Instability in Search. AEGIS reduces aggressive search reductions in unstable positions to improve tactical stability. |
+| `SEEPruning` | `check` | `false` | `true`, `false` | Enables pruning based on Static Exchange Evaluation. |
+| `LIMBO` | `check` | `false` | `true`, `false` | Enables Localized Instability Monitor and Bounded Deepening Override, which performs limited verification searches near unstable frontier nodes. |
 
-Full option and `go`-limit reference: `docs/UCI.md`.
+> Experimental search options such as `IIR`, `AEGIS`, `SEEPruning`, and `LIMBO` are disabled by default. Their effect on playing strength may vary depending on time control, hardware, and configuration.
 
 ## 10. Testing
 
