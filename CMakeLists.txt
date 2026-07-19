@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.20)
 
 project(EunshinBishopPhase5Q LANGUAGES CXX)
 
+# Match the frozen v2.62 reference's static CRT linkage (verified via
+# `dumpbin /dependents`: the reference imports only KERNEL32.dll, i.e.
+# /MT; the previous default here was CMake's dynamic-CRT default, /MD,
+# which added an MSVCP140/VCRUNTIME140 DLL-import indirection the
+# reference never paid. See docs/Checkpoint8_Report.md.
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 find_package(Threads REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)

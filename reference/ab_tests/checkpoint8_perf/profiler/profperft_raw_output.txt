@@ -1,0 +1,97 @@
+ProfPerft.exe -- chrono-based manual instrumentation of Position::doMove,
+Position::undoMove and generateMoves, plus a finer breakdown of doMove's
+internal isPseudoLegal / legality-check / checkers phases.
+
+Built from the diagnostic worktree at C:\profwt (git worktree at commit
+3af0c60, i.e. BEFORE the Checkpoint 8 doMove fix), Release config,
+MSVC 19.51.36248.0 x64, /O2 /DNDEBUG (CMake default Release flags),
+EUNSHIN_PROFILE_DOMOVE defined for eunshin_q_core.
+
+Source: profiler/tools_profperft.cpp (preserved alongside this file).
+The worktree's src/position/position.cpp was a copy of the real file with
+additive #ifdef EUNSHIN_PROFILE_DOMOVE instrumentation only (no logic
+changes) around Position::doMove's isPseudoLegal check, king-attacked
+legality check, and checkers (attackersTo) computation.
+
+Command:
+  "/c/profwt/build/Release/ProfPerft.exe" 5
+  "/c/profwt/build/Release/ProfPerft.exe" 6
+
+=== depth 5 ===
+perft(5) = 4865609
+total:               1215.8 ms
+generateMoves:       18.2 ms, 206604 calls, 88.1 ns avg, 1.5% of total
+Position::doMove:    875.2 ms, 5087587 calls, 172.0 ns avg, 72.0% of total
+Position::undoMove:  106.2 ms, 5072212 calls, 20.9 ns avg, 8.7% of total
+unaccounted (loop/recursion/timer overhead): 216.2 ms, 17.8% of total
+
+-- doMove breakdown (5087587 calls) --
+  isPseudoLegal:          119.6 ms, 9.8% of total, 13.7% of doMove
+  legality check:         105.4 ms, 8.7% of total, 12.0% of doMove
+  checkers (attackersTo): 103.3 ms, 8.5% of total, 11.8% of doMove
+  rest of doMove (hashing, board mutation, bookkeeping): 546.9 ms, 45.0% of total, 62.5% of doMove
+
+=== depth 6 ===
+perft(6) = 119060324
+total:               31376.8 ms
+generateMoves:       464.0 ms, 5072213 calls, 91.5 ns avg, 1.5% of total
+Position::doMove:    21851.4 ms, 125049325 calls, 174.7 ns avg, 69.6% of total
+Position::undoMove:  2632.7 ms, 124132536 calls, 21.2 ns avg, 8.4% of total
+unaccounted (loop/recursion/timer overhead): 6428.6 ms, 20.5% of total
+
+-- doMove breakdown (125049325 calls) --
+  isPseudoLegal:          3036.3 ms, 9.7% of total, 13.9% of doMove
+  legality check:         2484.5 ms, 7.9% of total, 11.4% of doMove
+  checkers (attackersTo): 2539.2 ms, 8.1% of total, 11.6% of doMove
+  rest of doMove (hashing, board mutation, bookkeeping): 13791.5 ms, 44.0% of total, 63.1% of doMove
+
+=== Interpretation ===
+Position::doMove accounts for ~70-72% of total perft wall time (both depths
+agree closely, confirming the measurement is stable). Within doMove, the
+three explicitly-instrumented sub-phases (isPseudoLegal re-validation,
+king-attacked legality check, checkers/attackersTo computation) together
+account for only ~31.4% of doMove's own time (~36.9% at depth 5,
+~36.9% at depth 6) -- none of them individually dominate. The remaining
+"rest of doMove" bucket (hashing, board mutation, bookkeeping -- i.e.
+everything between the StateInfo setup and the final checkers assignment)
+is ~62.5-63.1% of doMove's time on its own, roughly double any single
+instrumented sub-phase and larger than all three combined.
+
+This pointed the investigation at doMove's StateInfo setup rather than at
+isPseudoLegal (the initial hypothesis going into this profiling run).
+Reading src/position/position.cpp's doMove and src/position/state.h /
+src/core/nnue_state.h together showed the concrete cause: doMove opened
+with `newState = StateInfo{};`, a full zero-initialization of the struct
+-- including its embedded NNUE::AccumulatorState, which holds
+std::array<std::array<int32_t, 256>, 2> (2048 bytes). Every field of
+StateInfo is then explicitly assigned an real value later in the same
+function (the accumulator field itself is overwritten two statements later
+via `newState.accumulator = oldState->accumulator;`, another full
+2048-byte write). The only field not explicitly (re)assigned before the
+zero-init's effect could matter was `checkers`, which is unconditionally
+assigned near the end of doMove before any successful return, and is never
+read on a failed-move path (callers already discard StateInfo when doMove
+returns false, per the existing perft/generateLegalMoves/isLegal contract).
+
+Net effect: every doMove call was performing two full-size writes to the
+2048-byte accumulator array (one from the redundant zero-init, one from the
+real copy) where one was necessary. At perft(6)'s 125,049,325 doMove calls,
+that is roughly 250 MB of entirely avoidable memory traffic on top of the
+250 MB of necessary accumulator-copy traffic -- consistent with "rest of
+doMove" being memory-copy-bound and dominating over the three
+computation-bound sub-phases.
+
+The fix (applied to the real project, not this throwaway worktree) removes
+the redundant `newState = StateInfo{};` and instead explicitly assigns
+`newState.checkers = EMPTY_BB;` alongside the block's other explicit field
+assignments, at negligible cost (one 8-byte write) versus zero cost of
+correctness risk (every field is still explicitly assigned before use).
+See src/position/position.cpp's Position::doMove and the code comment
+added there. Debug-config CTest (which exercises `assert(isConsistent())`
+after every doMove/undoMove) passed after the fix, and perft(6) remained
+exactly 119,060,324 on the real project's Release build.
+
+This worktree (C:\profwt) and its instrumentation are diagnostic-only and
+are not part of the shipped project; they are discarded after this
+checkpoint. This file and tools_profperft.cpp are preserved here purely as
+evidence of the profiling method and raw results.

@@ -1,0 +1,8 @@
+﻿===== v2.62-reference perft(6) x3 =====
+run 1 : perft(6) = 119060324  (5615 ms, 21203 knps)
+run 2 : perft(6) = 119060324  (8001 ms, 14880 knps)
+run 3 : perft(6) = 119060324  (8060 ms, 14771 knps)
+===== Q-after-fix(final binary, sha256 b8e6c4c9...) perft(6) x3 =====
+run 1 : info string perft 6: 119060324 nodes, 10805 ms, 11019002 nps
+run 2 : info string perft 6: 119060324 nodes, 10813 ms, 11010850 nps
+run 3 : info string perft 6: 119060324 nodes, 9480 ms, 12559105 nps

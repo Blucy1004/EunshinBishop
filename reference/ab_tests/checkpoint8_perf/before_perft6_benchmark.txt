@@ -1,0 +1,4 @@
+﻿===== Q-before-fix(3af0c60+MT) perft(6) x3 =====
+run 1 : info string perft 6: 119060324 nodes, 16611 ms, 7167559 nps
+run 2 : info string perft 6: 119060324 nodes, 15447 ms, 7707666 nps
+run 3 : info string perft 6: 119060324 nodes, 14947 ms, 7965499 nps
