@@ -68,6 +68,19 @@ public:
     [[nodiscard]] const SearchWorker& worker() const noexcept { return worker_; }
     [[nodiscard]] const Evaluator& evaluator() const noexcept { return evaluator_; }
 
+    // Specification section 26 debug/diagnostic helpers. Cold path only: each
+    // rejects while a search is active rather than racing it, mirroring
+    // setOption's discipline. perft() and verifyAccumulator() both make and
+    // undo their own moves internally, so position_ is unchanged on return.
+    [[nodiscard]] std::uint64_t debugPerft(Depth depth, std::string* error = nullptr);
+    [[nodiscard]] EvalResult debugEvaluate(std::string* error = nullptr);
+    // The breakdown out-parameter is the primary result; the returned total
+    // is a convenience equal to its tapered sum, so it is not [[nodiscard]].
+    Value debugClassicalBreakdown(ClassicalBreakdown& breakdown,
+                                  std::string* error = nullptr);
+    [[nodiscard]] NNUE::AccumulatorCheck debugVerifyAccumulator(
+        std::string* error = nullptr);
+
 private:
     bool newGameUnlocked(std::string* error);
     bool setPositionUnlocked(std::string_view fen, std::string* error);

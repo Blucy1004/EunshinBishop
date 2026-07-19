@@ -52,6 +52,24 @@ search runs on its own thread; they never block command intake, and a
 search never exceeds `TimeManager`'s hard deadline regardless of which other
 options are enabled.
 
+## Debug/diagnostic commands (specification section 26)
+
+Not standard UCI; every response line is still framed as `info string` so a
+strict GUI parser can safely ignore it. None of these auto-stop an active
+search -- each rejects cleanly with an `info string ... failed: ...` line
+instead of racing or force-stopping it.
+
+| Command | Effect |
+|---|---|
+| `perft <depth>` | runs perft (depth 1-9) from the current position, reports nodes/time/nps |
+| `eval` | one-line classical/NNUE/final score summary, side-to-move relative |
+| `evaldetail` | full classical breakdown (material/PSQT/pawns/mobility/king safety/threats/passed pawns/space/miscellaneous, plus any unmodeled remainder) and the NNUE residual/absolute reconciliation |
+| `nnuecheck` | network load status, path, payload SHA-256, generation |
+| `nnueverify` | `NNUE::Network::verifyAccumulator`: incremental vs. from-scratch accumulator agreement |
+| `see <move>` | `See::see` value and `seeGe(..., 0)` for a UCI move in the current position |
+| `key` | position/pawn/material Zobrist keys, hex |
+| `checkboard` | `Position::isConsistent()`; prints the specific inconsistency if not |
+
 ## Commands not implemented
 
 `ponderhit`, `register`, and MultiPV are not implemented in this checkpoint.

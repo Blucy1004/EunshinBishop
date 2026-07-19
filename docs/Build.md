@@ -41,6 +41,32 @@ ctest --test-dir build --output-on-failure
 Swap `CXX=g++` / `CXX=clang++` before the `cmake -S` step to select the
 compiler explicitly.
 
+### Direct GCC build (no CMake)
+
+CMake is the supported path; this is provided per specification section 27
+as a direct-compiler example, e.g. for a minimal container without CMake
+installed. It has the same untested status as the CMake-driven Linux build
+above.
+
+```bash
+g++ -std=c++17 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Wshadow -Wconversion \
+    -Isrc \
+    src/core/attacks.cpp src/core/bitboard.cpp src/core/random.cpp \
+    src/core/zobrist.cpp \
+    src/position/fen.cpp src/position/movegen.cpp src/position/position.cpp \
+    src/eval/classical.cpp src/eval/evaluator.cpp src/eval/nnue/network.cpp \
+    src/search/history.cpp src/search/aegis.cpp src/search/limbo.cpp \
+    src/search/move_picker.cpp src/search/search.cpp src/search/see.cpp \
+    src/search/time_manager.cpp src/search/tt.cpp src/search/worker.cpp \
+    src/engine/engine.cpp src/engine/options.cpp \
+    src/uci/uci.cpp src/main.cpp \
+    -lpthread \
+    -o EunshinBishop
+```
+
+Copy `networks/firstnet_v5_10b.snnue` next to the resulting `EunshinBishop`
+binary (or leave it out and run with `UseNNUE=false`).
+
 ## Building without the NNUE network
 
 The engine must build and start with no `.snnue` file present at all: set

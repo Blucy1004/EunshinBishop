@@ -248,6 +248,70 @@ void Engine::finishSearch() {
     worker_.finishSearch();
 }
 
+std::uint64_t Engine::debugPerft(Depth depth, std::string* error) {
+    const std::lock_guard<std::mutex> lock(controlMutex_);
+    if (error) error->clear();
+    if (!initialized_) {
+        fail(error, "Engine is not initialized");
+        return 0;
+    }
+    if (worker_.isSearching()) {
+        fail(error, "cannot run perft while search is active");
+        return 0;
+    }
+    // perft() pairs every doMove with an undoMove internally, so position_
+    // is unchanged once this returns.
+    return perft(position_, depth);
+}
+
+EvalResult Engine::debugEvaluate(std::string* error) {
+    const std::lock_guard<std::mutex> lock(controlMutex_);
+    if (error) error->clear();
+    if (!initialized_) {
+        fail(error, "Engine is not initialized");
+        return EvalResult{};
+    }
+    if (worker_.isSearching()) {
+        fail(error, "cannot evaluate while search is active");
+        return EvalResult{};
+    }
+    return evaluator_.evaluate(position_, options_.snapshot());
+}
+
+Value Engine::debugClassicalBreakdown(ClassicalBreakdown& breakdown,
+                                      std::string* error) {
+    const std::lock_guard<std::mutex> lock(controlMutex_);
+    breakdown = ClassicalBreakdown{};
+    if (error) error->clear();
+    if (!initialized_) {
+        fail(error, "Engine is not initialized");
+        return 0;
+    }
+    if (worker_.isSearching()) {
+        fail(error, "cannot evaluate while search is active");
+        return 0;
+    }
+    return evaluator_.classical().evaluate(position_, &breakdown);
+}
+
+NNUE::AccumulatorCheck Engine::debugVerifyAccumulator(std::string* error) {
+    const std::lock_guard<std::mutex> lock(controlMutex_);
+    if (error) error->clear();
+    if (!initialized_) {
+        fail(error, "Engine is not initialized");
+        return NNUE::AccumulatorCheck{};
+    }
+    if (worker_.isSearching()) {
+        fail(error, "cannot verify NNUE while search is active");
+        return NNUE::AccumulatorCheck{};
+    }
+    if (!evaluator_.network().ready()) {
+        fail(error, "no NNUE network is loaded");
+        return NNUE::AccumulatorCheck{};
+    }
+    return evaluator_.network().verifyAccumulator(position_);
+}
+
 bool Engine::reloadNetworkUnlocked() {
     const std::string resolved = resolveNetworkPathUnlocked();
     const NNUE::LoadResult load = evaluator_.loadNetwork(resolved);

@@ -526,6 +526,55 @@ void testSearchAndEngine(const std::string& networkPath) {
            "SEEPruning and LIMBO can be disabled again");
 }
 
+void testDebugCommands(const std::string& networkPath) {
+    std::istringstream input(
+        "uci\n"
+        "isready\n"
+        "setoption name EvalFile value " + networkPath + "\n" +
+        "setoption name UseNNUE value true\n"
+        "position startpos\n"
+        "perft 4\n"
+        "key\n"
+        "checkboard\n"
+        "eval\n"
+        "evaldetail\n"
+        "nnuecheck\n"
+        "nnueverify\n"
+        "see e2e4\n"
+        "see e2e5\n"
+        "quit\n");
+    std::ostringstream output;
+    const int code = UCI::run(input, output);
+    const std::string transcript = output.str();
+
+    expect(code == 0, "debug-command session exits cleanly");
+    expect(transcript.find("info string perft 4: 197281 nodes") !=
+               std::string::npos,
+           "perft 4 from startpos reports the exact known node count");
+    expect(transcript.find("info string key position=") != std::string::npos,
+           "key reports a position key");
+    expect(transcript.find("info string checkboard: consistent") !=
+               std::string::npos,
+           "checkboard reports a consistent position");
+    expect(transcript.find("info string eval: classical ") != std::string::npos,
+           "eval reports a classical score");
+    expect(transcript.find("info string Classical STM: ") != std::string::npos &&
+               transcript.find("info string Final STM: ") != std::string::npos,
+           "evaldetail reports classical and final STM lines");
+    expect(transcript.find("info string nnuecheck: network loaded") !=
+               std::string::npos,
+           "nnuecheck confirms the network actually loaded (never a silent "
+           "classical fallback in this test)");
+    expect(transcript.find("info string nnueverify: incremental matches "
+                            "scratch exactly") != std::string::npos,
+           "nnueverify confirms incremental/scratch accumulator agreement");
+    expect(transcript.find("info string see e2e4: ") != std::string::npos,
+           "see reports a value for a legal move");
+    expect(transcript.find("is not a legal move") != std::string::npos,
+           "see rejects an illegal move (e2e5 is blocked by e7 only after "
+           "black moves, but from startpos it is not a pawn's legal jump)");
+}
+
 void testUciProtocol() {
     std::istringstream input(
         "uci\n"
@@ -566,6 +615,7 @@ int main(int argc, char** argv) {
     testTimeManager();
     testAegisPolicy();
     testSearchAndEngine(networkPath);
+    testDebugCommands(networkPath);
     testUciProtocol();
 
     if (failures != 0) {

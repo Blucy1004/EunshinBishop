@@ -3,8 +3,11 @@
 #include "core/move.h"
 #include "core/version.h"
 #include "engine/engine.h"
+#include "eval/score.h"
 #include "position/fen.h"
+#include "position/movegen.h"
 #include "search/search.h"
+#include "search/see.h"
 
 #include <algorithm>
 #include <charconv>
@@ -14,6 +17,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <iomanip>
 #include <istream>
 #include <limits>
 #include <mutex>
@@ -102,6 +106,16 @@ template <typename Integer>
     if (base > std::numeric_limits<std::uint64_t>::max() - fraction)
         return std::numeric_limits<std::uint64_t>::max();
     return base + fraction;
+}
+
+[[nodiscard]] std::string toHex(Key key) {
+    std::ostringstream stream;
+    stream << std::hex << std::setw(16) << std::setfill('0') << key;
+    return stream.str();
+}
+
+[[nodiscard]] std::string formatCentipawns(Value value) {
+    return (value >= 0 ? "+" : "") + std::to_string(value) + " cp";
 }
 
 class Session final {
@@ -292,6 +306,211 @@ private:
             return;
         }
         waitForSearchActivation();
+    }
+
+    // Specification section 26 debug/diagnostic commands. None of these are
+    // standard UCI; every line is still framed as "info string" so a strict
+    // GUI parser can safely ignore them. None auto-stops an active search --
+    // Engine's debug methods reject cleanly instead, since force-stopping a
+    // search to answer an unrelated diagnostic query would be surprising.
+    void handlePerft(const std::vector<std::string>& words) {
+        int depth = 0;
+        if (words.size() < 2 || !parseInteger(words[1], depth) ||
+            depth < 1 || depth > 9) {
+            writeLine("info string perft requires an integer depth from 1 to 9");
+            return;
+        }
+
+        std::string error;
+        const auto start = std::chrono::steady_clock::now();
+        const std::uint64_t nodes = engine_.debugPerft(depth, &error);
+        const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - start).count();
+        if (!error.empty()) {
+            writeLine("info string perft failed: " + protocolSafe(error));
+            return;
+        }
+        writeLine("info string perft " + std::to_string(depth) + ": " +
+                  std::to_string(nodes) + " nodes, " +
+                  std::to_string(elapsedMs) + " ms, " +
+                  std::to_string(nodesPerSecond(nodes, elapsedMs)) + " nps");
+    }
+
+    void handleEval(bool detailed) {
+        std::string error;
+        const EvalResult result = engine_.debugEvaluate(&error);
+        if (!error.empty()) {
+            writeLine("info string eval failed: " + protocolSafe(error));
+            return;
+        }
+
+        if (!detailed) {
+            std::string line = "info string eval: classical " +
+                formatCentipawns(result.classical);
+            if (result.nnueUsed) {
+                line += ", nnue raw " + formatCentipawns(result.networkRaw) +
+                        ", applied " + formatCentipawns(result.networkApplied);
+            } else if (result.nnueRequested && !result.nnueAvailable) {
+                line += " (NNUE requested but unavailable; classical fallback)";
+            }
+            line += ", final " + formatCentipawns(result.finalScore) +
+                    " (side to move)";
+            writeLine(line);
+            return;
+        }
+
+        ClassicalBreakdown breakdown;
+        engine_.debugClassicalBreakdown(breakdown, &error);
+        if (!error.empty()) {
+            writeLine("info string evaldetail failed: " + protocolSafe(error));
+            return;
+        }
+
+        const bool blackToMove =
+            engine_.position().sideToMove() == Color::Black;
+        const auto stm = [&](Score score) noexcept {
+            const Value tapered = taper(score, breakdown.phase);
+            return blackToMove ? static_cast<Value>(-tapered) : tapered;
+        };
+
+        const Value materialCp = stm(breakdown.material);
+        const Value psqtCp = stm(breakdown.psqt);
+        const Value pawnsCp = stm(breakdown.pawns);
+        const Value mobilityCp = stm(breakdown.mobility);
+        const Value kingSafetyCp = stm(breakdown.kingSafety);
+        const Value threatsCp = stm(breakdown.threats);
+        const Value passedPawnsCp = stm(breakdown.passedPawns);
+        const Value spaceCp = stm(breakdown.space);
+        const Value miscellaneousCp = stm(breakdown.miscellaneous);
+        // ClassicalEvaluator::evaluate() adds a small fixed side-to-move
+        // bonus directly in its return statement, outside every
+        // ClassicalBreakdown category. Reconciling here (rather than
+        // silently dropping it) keeps this printout an honest accounting
+        // that actually sums to "Classical STM", not just the categorized
+        // part of it.
+        const Value categorizedCp = static_cast<Value>(
+            materialCp + psqtCp + pawnsCp + mobilityCp + kingSafetyCp +
+            threatsCp + passedPawnsCp + spaceCp + miscellaneousCp);
+        const Value uncategorizedCp = static_cast<Value>(
+            result.classical - categorizedCp);
+
+        writeLine("info string Classical STM: " +
+                  formatCentipawns(result.classical));
+        writeLine("info string Material: " + formatCentipawns(materialCp));
+        writeLine("info string PSQT: " + formatCentipawns(psqtCp));
+        writeLine("info string Pawns: " + formatCentipawns(pawnsCp));
+        writeLine("info string Mobility: " + formatCentipawns(mobilityCp));
+        writeLine("info string King safety: " + formatCentipawns(kingSafetyCp));
+        writeLine("info string Threats: " + formatCentipawns(threatsCp));
+        writeLine("info string Passed pawns: " + formatCentipawns(passedPawnsCp));
+        writeLine("info string Space: " + formatCentipawns(spaceCp));
+        writeLine("info string Miscellaneous: " +
+                  formatCentipawns(miscellaneousCp));
+        if (uncategorizedCp != 0)
+            writeLine("info string Tempo/unmodeled (not in any category above): " +
+                      formatCentipawns(uncategorizedCp));
+
+        if (result.nnueUsed) {
+            writeLine("info string NNUE mode: " +
+                      std::string(toString(engine_.options().nnueOutputMode)));
+            writeLine("info string NNUE raw STM: " +
+                      formatCentipawns(result.networkRaw));
+            if (engine_.options().nnueOutputMode == NNUEOutputMode::Residual) {
+                writeLine("info string Residual scale: " +
+                          std::to_string(engine_.options().residualScale) + "%");
+                writeLine("info string Residual guard factor: " +
+                          std::to_string(result.guardFactorPercent) + "%");
+                writeLine("info string Residual applied: " +
+                          formatCentipawns(result.networkApplied));
+            } else {
+                writeLine("info string Absolute blend: " +
+                          std::to_string(engine_.options().absoluteBlend) + "%");
+            }
+        } else if (result.nnueRequested && !result.nnueAvailable) {
+            writeLine("info string NNUE requested but unavailable; "
+                      "classical fallback");
+        } else {
+            writeLine("info string NNUE mode: disabled (UseNNUE=false)");
+        }
+
+        writeLine("info string Final STM: " + formatCentipawns(result.finalScore));
+    }
+
+    void handleNnueCheck() {
+        const bool ready = engine_.nnueLoaded();
+        writeLine("info string nnuecheck: " +
+                  std::string(ready ? "network loaded" : "no network loaded") +
+                  "; " + protocolSafe(engine_.nnueStatusMessage()));
+        if (!ready) return;
+        writeLine("info string nnuecheck path: " +
+                  protocolSafe(engine_.evaluator().network().loadedPath()));
+        writeLine("info string nnuecheck sha256: " +
+                  engine_.evaluator().network().payloadSha256());
+        writeLine("info string nnuecheck generation: " +
+                  std::to_string(engine_.evaluator().network().generation()));
+    }
+
+    void handleNnueVerify() {
+        std::string error;
+        const NNUE::AccumulatorCheck check =
+            engine_.debugVerifyAccumulator(&error);
+        if (!error.empty()) {
+            writeLine("info string nnueverify failed: " + protocolSafe(error));
+            return;
+        }
+        if (!check.available) {
+            writeLine("info string nnueverify: no accumulator data available");
+            return;
+        }
+
+        writeLine(std::string("info string nnueverify: ") +
+                  (check.exact ? "incremental matches scratch exactly"
+                               : "MISMATCH between incremental and scratch"));
+        writeLine("info string nnueverify white: incremental " +
+                  std::to_string(check.incrementalWhite) + " cp, scratch " +
+                  std::to_string(check.scratchWhite) + " cp");
+        writeLine("info string nnueverify side-to-move: incremental " +
+                  std::to_string(check.incrementalSideToMove) + " cp, scratch " +
+                  std::to_string(check.scratchSideToMove) + " cp");
+        if (!check.exact)
+            writeLine("info string nnueverify mismatch at perspective " +
+                      std::to_string(check.mismatchPerspective) + ", neuron " +
+                      std::to_string(check.mismatchNeuron));
+    }
+
+    void handleSee(const std::vector<std::string>& words) {
+        if (words.size() < 2) {
+            writeLine("info string see requires a UCI move argument");
+            return;
+        }
+        const Position& position = engine_.position();
+        const Move move = moveFromUci(position, words[1]);
+        if (move.isNone()) {
+            writeLine("info string see: '" + protocolSafe(words[1]) +
+                      "' is not a legal move in the current position");
+            return;
+        }
+        writeLine("info string see " + moveToUci(move) + ": " +
+                  formatCentipawns(See::see(position, move)) +
+                  " (seeGe 0 = " +
+                  (See::seeGe(position, move, 0) ? "true" : "false") + ")");
+    }
+
+    void handleKey() {
+        const Position& position = engine_.position();
+        writeLine("info string key position=" + toHex(position.key()) +
+                  " pawn=" + toHex(position.pawnKey()) +
+                  " material=" + toHex(position.materialKey()));
+    }
+
+    void handleCheckBoard() {
+        const Position& position = engine_.position();
+        if (position.isConsistent()) {
+            writeLine("info string checkboard: consistent");
+        } else {
+            writeLine("info string checkboard: INCONSISTENT: " +
+                      protocolSafe(position.consistencyError()));
+        }
     }
 
     void handleSetOption(const std::vector<std::string>& words) {
@@ -487,6 +706,22 @@ private:
         } else if (command == "quit") {
             stopAndJoin();
             return true;
+        } else if (command == "perft") {
+            handlePerft(words);
+        } else if (command == "eval") {
+            handleEval(false);
+        } else if (command == "evaldetail") {
+            handleEval(true);
+        } else if (command == "nnuecheck") {
+            handleNnueCheck();
+        } else if (command == "nnueverify") {
+            handleNnueVerify();
+        } else if (command == "see") {
+            handleSee(words);
+        } else if (command == "key") {
+            handleKey();
+        } else if (command == "checkboard") {
+            handleCheckBoard();
         } else {
             writeLine("info string unknown command: " +
                       protocolSafe(words.front()));
