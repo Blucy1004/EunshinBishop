@@ -1,0 +1,51 @@
+Started game 1 of 12 (v2.62_ref_classical vs Q_classical)
+Finished game 1 (v2.62_ref_classical vs Q_classical): 1-0 {White mates}
+Score of v2.62_ref_classical vs Q_classical: 1 - 0 - 0  [1.000] 1
+Started game 2 of 12 (Q_classical vs v2.62_ref_classical)
+Finished game 2 (Q_classical vs v2.62_ref_classical): 0-1 {Black mates}
+Score of v2.62_ref_classical vs Q_classical: 2 - 0 - 0  [1.000] 2
+Started game 3 of 12 (v2.62_ref_classical vs Q_classical)
+Finished game 3 (v2.62_ref_classical vs Q_classical): 1-0 {White mates}
+Score of v2.62_ref_classical vs Q_classical: 3 - 0 - 0  [1.000] 3
+Started game 4 of 12 (Q_classical vs v2.62_ref_classical)
+Finished game 4 (Q_classical vs v2.62_ref_classical): 1/2-1/2 {Draw by 3-fold repetition}
+Score of v2.62_ref_classical vs Q_classical: 3 - 0 - 1  [0.875] 4
+Started game 5 of 12 (v2.62_ref_classical vs Q_classical)
+Finished game 5 (v2.62_ref_classical vs Q_classical): 1-0 {White mates}
+Score of v2.62_ref_classical vs Q_classical: 4 - 0 - 1  [0.900] 5
+Started game 6 of 12 (Q_classical vs v2.62_ref_classical)
+Finished game 6 (Q_classical vs v2.62_ref_classical): 1/2-1/2 {Draw by 3-fold repetition}
+Score of v2.62_ref_classical vs Q_classical: 4 - 0 - 2  [0.833] 6
+Started game 7 of 12 (v2.62_ref_classical vs Q_classical)
+Finished game 7 (v2.62_ref_classical vs Q_classical): 1/2-1/2 {Draw by 3-fold repetition}
+Score of v2.62_ref_classical vs Q_classical: 4 - 0 - 3  [0.786] 7
+Started game 8 of 12 (Q_classical vs v2.62_ref_classical)
+Finished game 8 (Q_classical vs v2.62_ref_classical): 0-1 {Black mates}
+Score of v2.62_ref_classical vs Q_classical: 5 - 0 - 3  [0.813] 8
+Started game 9 of 12 (v2.62_ref_classical vs Q_classical)
+Finished game 9 (v2.62_ref_classical vs Q_classical): 1-0 {White mates}
+Score of v2.62_ref_classical vs Q_classical: 6 - 0 - 3  [0.833] 9
+Started game 10 of 12 (Q_classical vs v2.62_ref_classical)
+Finished game 10 (Q_classical vs v2.62_ref_classical): 0-1 {Black mates}
+Score of v2.62_ref_classical vs Q_classical: 7 - 0 - 3  [0.850] 10
+Started game 11 of 12 (v2.62_ref_classical vs Q_classical)
+Finished game 11 (v2.62_ref_classical vs Q_classical): 1-0 {White mates}
+Score of v2.62_ref_classical vs Q_classical: 8 - 0 - 3  [0.864] 11
+Started game 12 of 12 (Q_classical vs v2.62_ref_classical)
+Finished game 12 (Q_classical vs v2.62_ref_classical): 0-1 {Black mates}
+Score of v2.62_ref_classical vs Q_classical: 9 - 0 - 3  [0.875] 12
+...      v2.62_ref_classical playing White: 5 - 0 - 1  [0.917] 6
+...      v2.62_ref_classical playing Black: 4 - 0 - 2  [0.833] 6
+...      White vs Black: 5 - 4 - 3  [0.542] 12
+Elo difference: 338.0 +/- 417.6, LOS: 99.9 %, DrawRatio: 25.0 %
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+
+Player: v2.62_ref_classical
+   "Draw by 3-fold repetition": 3
+   "Win: Black mates": 4
+   "Win: White mates": 5
+Player: Q_classical
+   "Draw by 3-fold repetition": 3
+   "Loss: Black mates": 4
+   "Loss: White mates": 5
+Finished match

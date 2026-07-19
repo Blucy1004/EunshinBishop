@@ -1,0 +1,37 @@
+Pure move-generation throughput comparison, isolated from evaluation and
+NNUE entirely. Captured 2026-07-19.
+
+Command (both engines, from the same working directory,
+C:\Users\fly_t\Downloads\SniperBishop\EunshinBishop_Q):
+
+  uci
+  isready
+  ucinewgame
+  position startpos
+  perft 6
+
+-- v2.62 reference --
+perft(6) = 119060324  (6194 ms, 19221 knps)
+
+-- Q --
+info string perft 6: 119060324 nodes, 17471 ms, 6814740 nps
+
+Both engines produce the textbook-correct startpos perft(6) node count,
+119,060,324 -- this rules out a move-generation correctness bug entirely.
+The gap is purely in throughput: the reference generates and
+makes/unmakes moves at ~19.2M nodes/sec; Q does the same work at
+~6.8M nodes/sec, a ~2.8x gap.
+
+This isolates the throughput gap seen in real search (see
+docs/Checkpoint7_Report.md's classical-only "go movetime 3000" comparison,
+roughly 3-4x) to the move-generation/make-unmake hot path itself, not to
+evaluation cost, NNUE inference, or search-algorithm overhead (pruning,
+ordering, TT). Since perft touches none of those, whatever accounts for
+this ~2.8x gap must live in `Position`/`MoveList`/`movegen.cpp`'s
+generation and `doMove`/`undoMove` machinery, or in the per-node dispatch
+around them.
+
+Not investigated further in this session per explicit instruction to find
+and reproduce the cause without changing code; this file is the
+reproduction, not a diagnosis of which specific line or data structure is
+responsible.

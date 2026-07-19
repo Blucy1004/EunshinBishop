@@ -112,14 +112,30 @@ UCI-smoke/fallback rows.
 [x] UCI smoke test passes
 [x] network-not-installed fallback works correctly
 [ ] residual equation verified against an independent reference computation
+    -- CHECKED AND FAILED: see docs/Checkpoint7_Report.md Finding 1. The
+       classical+full-residual formula can reverse the evaluation's sign
+       relative to the reference's blend (confirmed at canonical Kiwipete).
+       This is a release blocker, not an open item.
 [x] NNUE scratch/incremental accuracy match (checkpoint 3 integration tests)
 [x] illegal moves: 0 observed in all recorded test runs
 [x] crashes: 0 observed in all recorded test runs
 [ ] time-loss root cause investigation (no time-control games run yet)
 [ ] Cute Chess regression testing completed
+    -- STARTED AND BLOCKED: docs/Checkpoint6_Report.md's small-scale batch
+       found a 21-1-2 loss margin for Q; docs/Checkpoint7_Report.md
+       root-caused it to two issues (this row's residual-equation finding
+       above, plus a ~2.6-4x move-generation/make-unmake throughput gap,
+       Finding 3). Neither is fixed. Do not run the full 200-game batch
+       until both are addressed -- it will not produce a different
+       conclusion.
 [ ] every command in README.md independently re-verified by someone other than its author
 [ ] network and training-data licenses confirmed (see LICENSE, networks/PROVENANCE.md)
 [ ] SHA-256 checksums generated for the actual release assets (not just checkpoint archives)
+[ ] move-generation/make-unmake throughput gap resolved or explained
+    -- NEW, added by docs/Checkpoint7_Report.md Finding 3: Q's perft(6)
+       throughput is ~2.8x slower than the reference's despite identical,
+       correct node counts (19.2M nps vs 6.8M nps). Root cause not yet
+       localized to a specific function/data structure.
 ```
 
 Checked rows are backed by a specific `docs/CheckpointN_Report.md`; do not

@@ -1,0 +1,52 @@
+Search depth/node throughput comparison at a fixed 3000 ms movetime,
+canonical Kiwipete (r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R
+w KQkq - 0 1). Captured 2026-07-19, same machine, sequential (not
+simultaneous) runs.
+
+================================================================
+UseNNUE=true (default)
+================================================================
+
+-- v2.62 reference (movetime 3000) --
+depth 1..7 reached; depth 6: 101323 nodes @ 610379 nps (166 ms)
+depth 7: 257954 nodes @ 578372 nps (446 ms)
+bestmove e2a6
+
+-- Q (movetime 3000) --
+depth 1..6 reached (7 not completed in the window shown); depth 6: 122609
+nodes @ 220917 nps (555 ms)
+bestmove e2a6 ponder b4c3
+
+Reference reaches one full ply deeper (7 vs 6) in the same wall-clock
+budget. NPS: reference ~580-610k, Q ~220k -- roughly 2.6-2.8x.
+
+================================================================
+UseNNUE=false (classical only)
+================================================================
+
+-- v2.62 reference (movetime 3000) --
+depth 1..10 reached; depth 8: 1297569 nodes @ 1280917 nps (1013 ms)
+depth 9: 2021401 nodes @ 1275331 nps (1585 ms)
+depth 10: 3628049 nodes @ 1304115 nps (2782 ms)
+bestmove e2a6
+
+-- Q (movetime 3000) --
+depth 1..7 reached (window cut off before depth 8 could be confirmed);
+depth 6: 210331 nodes @ 335456 nps (627 ms)
+depth 7: 595379 nodes @ 320959 nps (1855 ms)
+bestmove e2a6 ponder e6d5
+
+Reference reaches depth 10 (3.6M nodes) in the same window Q needs to
+reach depth 7 (595K nodes) -- a ~3-4 ply gap at this position, NPS
+~1.28-1.3M (reference) vs ~320-335k (Q), roughly 3.8-4x.
+
+Even with NNUE fully disabled, Q's search throughput is still
+substantially lower than the reference's, consistent with
+perft6_speed_comparison.txt's finding that the gap is rooted in
+move-generation/make-unmake throughput, not NNUE inference cost -- NNUE
+mode widens the reference/Q NPS ratio further (2.6-2.8x with NNUE vs
+3.8-4x classical-only reported here is the OPPOSITE direction from what
+"NNUE inference cost dominates" would predict, since Q's own NNUE-mode gap
+is actually smaller than its classical-mode gap here; treat this specific
+comparison as a single-position data point, not a general throughput
+model, and re-derive from a larger sample before relying on it further).

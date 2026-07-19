@@ -1,0 +1,73 @@
+Eval component comparison, identical FENs, both engines with UseNNUE=true
+(default), captured 2026-07-19 via each engine's own UCI-adjacent "eval"
+(reference) / "eval"+"evaldetail" (Q) commands, from the exact working
+directory both engines use in the checkpoint-6/7 tests
+(C:\Users\fly_t\Downloads\SniperBishop\EunshinBishop_Q).
+
+================================================================
+FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 (startpos)
+================================================================
+
+-- v2.62 reference --
+static eval selected: 20 cp (side to move)
+  Classical: 10 cp  FIRST_NET: 39 cp STM / 39 cp WhitePOV (incremental)
+  Scratch oracle: 39 cp WhitePOV  diff=0  Blend: 35%
+
+-- Q --
+Classical STM: +10 cp
+  Material +0 / PSQT +0 / Pawns +0 / Mobility +0 / King safety +0 /
+  Threats +0 / Passed pawns +0 / Space +0 / Miscellaneous +0 /
+  Tempo/unmodeled +10
+NNUE mode: Residual
+NNUE raw STM: +39 cp
+Residual scale: 100%  Residual guard factor: 100%  Residual applied: +39 cp
+Final STM: +49 cp
+
+Classical (10 vs 10) and NNUE raw (39 vs 39) match exactly between engines
+-- the network and classical evaluator both compute identical numbers.
+Only the COMBINATION differs: reference blends (35% NNUE / 65% classical)
+to +20 cp; Q adds the full NNUE output as a residual to get +49 cp. Both
+keep the same sign here.
+
+================================================================
+FEN: r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
+(canonical Kiwipete)
+================================================================
+
+-- v2.62 reference --
+static eval selected: 42 cp (side to move)
+  Classical: 103 cp  FIRST_NET: -131 cp STM / -131 cp WhitePOV (incremental)
+  Scratch oracle: -131 cp WhitePOV  diff=0  Blend: 35%
+
+-- Q --
+Classical STM: +103 cp
+  Material +0 / PSQT +105 / Pawns +0 / Mobility +9 / King safety +7 /
+  Threats -28 / Passed pawns +0 / Space +0 / Miscellaneous +0 /
+  Tempo/unmodeled +10
+NNUE mode: Residual
+NNUE raw STM: -131 cp
+Residual scale: 100%  Residual guard factor: 100%  Residual applied: -131 cp
+Final STM: -28 cp
+
+*** SIGN FLIP ***: Classical (103 vs 103) and NNUE raw (-131 vs -131) again
+match exactly between engines. The reference's blend keeps the FINAL score
+positive (+42 cp, agreeing with classical's own verdict that the position
+favors the side to move) because NNUE is only 35% of the combination. Q's
+residual-additive formula adds the full -131 cp on top of +103 cp classical,
+overturning the sign entirely: Q evaluates this exact position as -28 cp
+(favoring the OPPONENT), a 234 cp swing from the classical-only assessment
+and the opposite conclusion from the reference.
+
+ResidualGuard did not intervene (factor 100%) because its knee threshold
+(400 cp at this position's phase) is well above this 131 cp correction --
+by design (`src/eval/evaluator.cpp`'s `applyResidualGuard`: "Preserve
+ordinary tactical corrections exactly. Only the excess above a 4-pawn
+endgame / 6-pawn opening knee is compressed"). This is not a guard bug; the
+guard is doing exactly what it was written to do. The finding is that a
+131 cp "residual" that reverses a 103 cp classical verdict does not look
+like the kind of "small correction" the residual-additive design assumes,
+which raises the question (not yet answered / NOT investigated further per
+instruction to stop before changing code) of whether FIRST_NET v5's raw
+output is actually calibrated as `teacher - classical`, or is closer to an
+independent, comparably-scaled absolute evaluator for which the reference's
+blend approach is inherently more robust than a 100%-weight addition.

@@ -2,17 +2,26 @@
 
 Date: 2026-07-19
 
-Decision: **ACCEPT** for this checkpoint's scope only: (1) MSVC clean
-Release/Debug re-verification, (2) a static audit and correctness fix of
-`.github/workflows/build.yml` (the actual GCC/Clang execution happens after
-a future repository push -- this machine has neither compiler installed by
-explicit user decision, see `HANDOFF.md`), and (3) a small-scale paired A/B
-test between the frozen v2.62 reference and the current Q build using
-`docs/ABTesting.md`'s architecture-regression command. This is explicitly
-**not** an Elo determination -- the game count is far below the >=200/>=1000
-threshold `docs/ABTesting.md` and `AGENTS.md`'s experiment discipline
-require before trusting a result, and is reported as such throughout.
-Specification item 23 was not touched. `SEEPruning` and `LIMBO` remain at
+Decision: **ACCEPT** for parts 1-2 of this checkpoint's scope only: (1)
+MSVC clean Release/Debug re-verification, and (2) a static audit and
+correctness fix of `.github/workflows/build.yml` (the actual GCC/Clang
+execution happens after a future repository push -- this machine has
+neither compiler installed by explicit user decision, see `HANDOFF.md`).
+
+Part 3, the small-scale paired A/B test, is **not accepted as a closed
+result**. It surfaced a 21-1-2 loss margin for Q that is treated as a
+**release-blocking regression**, not a tuning gap to note and move past --
+see `docs/Checkpoint7_Report.md` for the root-cause investigation this
+triggered (classical-only isolation match, eval-component comparison, and a
+pure move-generation speed comparison), which found two independent,
+reproducible causes. Do not read this report's Part 3 in isolation; read it
+together with Checkpoint 7.
+
+This is explicitly **not** an Elo determination -- the game count is far
+below the >=200/>=1000 threshold `docs/ABTesting.md` and `AGENTS.md`'s
+experiment discipline require before trusting a result, and is reported as
+such throughout. Specification item 23 was not touched. `SEEPruning` and
+`LIMBO` remain at
 their default `false` for every game.
 
 ## Part 1: MSVC re-verification
@@ -172,21 +181,25 @@ Outcome breakdown: 21 games ended in checkmate, 2 by the 50-move rule.
 all 24 games.
 
 **Reading this result**: this is a small-scale batch, not an Elo
-determination. `docs/ABTesting.md` and `AGENTS.md`'s experiment discipline
-both require >=200 games before treating a result as preliminary evidence,
-extended to >=1000 for a promising candidate; 24 games is two orders of
-magnitude short of that, and cutechess-cli's own output reflects this --
-the "Elo difference: 416.6" figure has an **undefined (`nan`) confidence
-interval**, which is what a lopsided score at a small sample size produces,
-not a precise measurement. Report only what the game count actually
-supports: (1) both engines completed the entire batch with no crash, time
-forfeit, or illegal move; (2) the current Q build lost the large majority
-of games against the frozen reference at this fast time control, consistent
-with `docs/Checkpoint3_Report.md`'s Kiwipete fixed-depth finding that Q's
-search and evaluation already diverge from the reference's and have not
-been strength-tuned (`docs/ClassicalEvalBacklog.md`, item 23, is exactly
-that untouched work); (3) the result is not absolute -- Q won one game and
-drew two, so this is a strength gap, not a broken engine.
+determination -- `docs/ABTesting.md` and `AGENTS.md`'s experiment
+discipline both require >=200 games before treating a result as
+preliminary evidence, extended to >=1000 for a promising candidate, and
+cutechess-cli's own output reflects the small sample (the "Elo difference:
+416.6" figure has an **undefined, `nan`, confidence interval**). That
+caveat is about the *precision* of the number, not about whether the
+result deserves attention. It does: both engines completed the batch with
+zero crashes/forfeits/illegal moves (so this is not noise from a broken
+harness), the loss was consistent across both colors (so it is not a
+one-sided bug like a color-dependent time or book issue), and it is far
+too lopsided for "not tuned yet" to be a sufficient explanation on its own.
+**This was escalated to a root-cause investigation instead of being
+accepted as an expected gap -- see `docs/Checkpoint7_Report.md`.** That
+investigation found two independent, reproducible causes: a ~2.6-4x
+search-throughput deficit rooted in move generation/make-unmake (present
+with or without NNUE), and an NNUE evaluation-combination formula that can
+reverse the sign of the evaluation relative to the reference's blend
+(present only with NNUE enabled). Neither was fixed in that checkpoint
+either, per instruction to find and reproduce before changing code.
 
 Raw evidence: `reference/ab_tests/checkpoint6_architecture_regression/`
 (PGN with per-move eval/time annotations, full cutechess-cli log,
@@ -206,3 +219,8 @@ Raw evidence: `reference/ab_tests/checkpoint6_architecture_regression/`
   observation, not a `docs/ABTesting.md`-grade decision (which requires
   >=200 games, extended to >=1000 for a promising candidate). It should not
   be used to justify any option-default change.
+- **The regression itself is not resolved.** `docs/Checkpoint7_Report.md`
+  found and reproduced two independent causes but fixed neither -- no
+  source file was changed. Do not treat checkpoint 6 or 7 as clearing this
+  blocker; the next session's first job is fixing (or scoping the fix for)
+  Checkpoint 7's Findings 1 and 3, not further release scaffolding.
