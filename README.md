@@ -5,6 +5,10 @@ This is the "Q Architecture" migration of a supplied single-file
 `SniperBishop`/`EunshinBishop` v2.62 reference engine; the reference source
 is preserved byte for byte under `reference/source` and is never edited.
 
+은신비숍은 한국산 UCI 체스 엔진이며, 이 버전은 기존 SniperBishop 싱글파일 구조를 리뉴얼한 Q 아키텍처 버전입니다.
+
+**은신비숍을 추후 CCRL 등 해외 포럼에 공개할 계획이라 README를 영어로 썼습니다만 제 영어 실력이 그렇게 좋지 않기에 AI의 도움을 받았습니다**
+
 ## 1. About
 
 Q reimplements the frozen reference as separate `core` (bitboards, attacks,
