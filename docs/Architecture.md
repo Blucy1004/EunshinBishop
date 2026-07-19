@@ -1,5 +1,35 @@
 # Q Architecture
 
+## Scope through checkpoint 4
+
+Checkpoint 3 fills in the `Evaluator` and `future search()` boxes the
+checkpoint-2 diagram below left open, and adds the UCI frontend above
+`Engine`:
+
+```text
+UCI / Console (async stop)
+      |
+      v
+Engine::go  -->  SearchWorker::search  ---------- Evaluator (Classical / FIRST_NET v5 residual)
+                       |                               |
+                       v                               v
+              Position / Move generation / NNUE incremental accumulator
+                       |
+                       v
+              Bitboards / Attacks / Types
+```
+
+`SearchWorker::search` is iterative deepening with aspiration windows over
+PVS/alpha-beta, null-move, LMR, IIR, futility pruning, AEGIS-adjusted
+margins, and `TimeManager`-bounded qsearch. Checkpoint 4 adds two further,
+individually gated search policies on top of that: a strict, pin/king-legal
+static-exchange evaluator (`search/see.*`, specification item 20) consulted
+only from the optional `SEEPruning` qsearch path, and a bounded frontier
+verification policy (`search/limbo.*`, specification item 19, "LIMBO")
+consulted only from the optional `LIMBO` extension path. Both default to
+`false` and are documented in `Checkpoint4_Report.md`; neither changes the
+default search tree.
+
 ## Scope through checkpoint 2
 
 The Q migration starts with a leaf-first core.  Checkpoint 1 implements the
@@ -102,7 +132,11 @@ unique.
 The frozen reference's approximate check bonus remains unchanged for ordering
 scores.  Qsearch move admission uses an exact post-move check test so discovered
 checks are not silently omitted; this correctness distinction is covered by a
-dedicated test and will be included in later fixed-depth comparison reports.
+dedicated test and was included in the checkpoint-3 fixed-depth comparison
+report.  MovePicker's own capture ordering still uses that same approximate,
+ordering-only SEE; the strict, pin/king-legality-aware `See` module added in
+checkpoint 4 is deliberately kept separate and is consulted only from the
+optional `SEEPruning` path (see `Checkpoint4_Report.md`).
 
 ## Hot-path rules
 
@@ -115,9 +149,14 @@ remain cold paths.
 
 ## Behavioral preservation
 
-The original evaluation and integrated search are not yet migrated.  The
-reference artifact is frozen first, then typed position behavior is checked by
-perft, special-move tests, random make/unmake restoration, Zobrist restoration,
-and board/bitboard consistency.  Checkpoint 2 additionally verifies the new
-ownership modules in isolation.  Search equivalence belongs to the later
-evaluator/search integration checkpoint.
+The reference artifact was frozen first (`docs/Q0_Reference.md`), then typed
+position behavior was checked by perft, special-move tests, random
+make/unmake restoration, Zobrist restoration, and board/bitboard consistency.
+Checkpoint 2 additionally verified the ownership modules in isolation.
+Checkpoint 3 added the evaluator and integrated search themselves; the
+reference and Q are compared at fixed Kiwipete depths in
+`Checkpoint3_Report.md`, where they diverge past depth 6 by design (a
+different search algorithm and a different, residual-correction NNUE
+equation) -- this is documented evidence about the current gap, not a
+search-equivalence or strength claim. No Elo or paired-game claim exists for
+either engine as of checkpoint 4.

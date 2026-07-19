@@ -79,9 +79,12 @@ old UCI/global option reads during search
    changes until the explicit search session is finished.  Search nodes and
    `stop()` never acquire that mutex.
 9. Numbered items 7-12 refer to Evaluator, TimeManager, and fixed-depth search
-   whose implementations are numbered later.  The current checkpoint builds
-   their ownership boundary without adding a placeholder evaluator or fake
-   `go()` result.
+   whose implementations were numbered later (specification items 13-21).
+   Checkpoint 2 built their ownership boundary without adding a placeholder
+   evaluator or fake `go()` result; checkpoint 3 then filled that boundary in
+   for real (`Checkpoint3_Report.md`), and checkpoint 4 added the two search
+   policies (SEE, LIMBO) items 13-21 had deliberately deferred
+   (`Checkpoint4_Report.md`).
 
 ## Implementation order
 
@@ -97,4 +100,15 @@ old UCI/global option reads during search
    composition boundary.
 9. Add lazy staged MovePicker and clustered TT with isolated unit gates.
 10. Add classical/NNUE Evaluator, then integrate PVS/qsearch and TimeManager;
-    only then run depth 6/8/10 behavioral comparisons.
+    only then run depth 6/8/10 behavioral comparisons.  Done in checkpoint 3;
+    see `Checkpoint3_Report.md` for the comparison and why Q and the frozen
+    reference diverge past depth 6 by design.
+11. Add a strict, pin/king-legality-aware SEE module, independent from
+    MovePicker's approximate ordering SEE, and wire it into an optional
+    `SEEPruning` qsearch path that defaults to off (specification item 20).
+12. Add LIMBO, a bounded frontier verification policy gated by cooldown,
+    chain, AEGIS-overlap, and time/iteration-budget checks, wired into an
+    optional `LIMBO` extension path that defaults to off (specification item
+    19).  Both 11 and 12 are done in checkpoint 4; see
+    `Checkpoint4_Report.md`.  Neither has paired-game evidence yet, so
+    neither default should change.
