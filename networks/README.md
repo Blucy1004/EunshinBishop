@@ -1,11 +1,19 @@
-# Bundled network
+# Optional local network
 
-`firstnet_v5_10b.snnue` is the Q engine's default network.  Q defaults to
-`UseNNUE=true`, and this network is interpreted as a residual correction
-(`teacher - classical`).  Packaging will place it beside the executable; an
-explicit `EvalFile` path may override that location.
+The repository intentionally does **not** distribute `firstnet_v5_10b.snnue`
+until the project owner chooses an outbound license for the trained weights.
 
-Artifact facts:
+To use NNUE locally, place an authorized copy beside the executable or at:
+
+```text
+networks/firstnet_v5_10b.snnue
+```
+
+Then either keep the default `EvalFile=firstnet_v5_10b.snnue` when the file is
+beside the executable, or set `EvalFile` to its explicit path. Without the
+file, the engine reports the reason and falls back to classical evaluation.
+
+Known private artifact identity (for verification only):
 
 ```text
 bytes   12585424
@@ -13,12 +21,5 @@ format  SBNNUE2 v2, Architecture A/256
 sha256  E30958DE815A8E6104B9EF3F734FDBF817B1D698BC3B74815B48596030DED656
 ```
 
-The bundled copy and the originally supplied file have the same SHA-256:
-
-```text
-E30958DE815A8E6104B9EF3F734FDBF817B1D698BC3B74815B48596030DED656
-```
-
-See `PROVENANCE.md` for the owner's provenance statement and the distinction
-between dataset licensing, authorship of the trained weights, permission to
-bundle this file, and the final weight-license declaration.
+See `PROVENANCE.md` for the ownership and training statement. The hash above
+is not a redistribution grant.

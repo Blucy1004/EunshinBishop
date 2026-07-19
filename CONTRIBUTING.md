@@ -75,3 +75,12 @@ item-23 classical-evaluation backlog (`docs/ClassicalEvalBacklog.md`):
 - `/W4 /permissive-` (MSVC) or `-Wall -Wextra -Wpedantic -Wshadow
   -Wconversion` (GCC/Clang) must stay warning-free; do not silence a warning
   with a cast that changes behavior.
+
+
+## Stronger forks
+
+If a modified version demonstrates a statistically significant Elo improvement
+over the latest official EunshinBishop release, maintainers strongly encourage
+the author to share the relevant source code, patch, benchmark conditions, or
+technical findings with the upstream project. This is a non-binding community
+request, not an additional license condition; the GPL terms remain unchanged.

@@ -11,3 +11,21 @@ out/
 CMakeCache.txt
 CMakeFiles/
 .vs/
+
+# Trained network weights are private/local until an outbound license is chosen.
+networks/*.snnue
+reference/bin/*.snnue
+build-vs/
+build/
+build-*/
+.vs/
+.cache/
+.claude/
+.codex/
+claude/
+codex/
+*.obj
+*.pdb
+*.ilk
+*.user
+*.suo

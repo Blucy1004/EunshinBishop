@@ -379,7 +379,7 @@ private:
                 continue;
 
             StateInfo& childState = worker_.stateAt(ply + 1);
-            if (!position_.doMove(move, childState)) continue;
+            if (!position_.doMove(move, childState, false)) continue;
             updateAccumulator();
             const bool givesCheck = position_.inCheck();
 
@@ -554,7 +554,7 @@ private:
                 worker_.stackAt(ply - 1).currentMove.to() == move.to();
 
             StateInfo& childState = worker_.stateAt(ply + 1);
-            if (!position_.doMove(move, childState)) continue;
+            if (!position_.doMove(move, childState, false)) continue;
             updateAccumulator();
             const bool givesCheck = position_.inCheck();
 
@@ -781,7 +781,7 @@ private:
         generateMoves(position_, pseudo, GenerationType::All);
         for (std::size_t index = 0; index < pseudo.size; ++index) {
             StateInfo probe;
-            if (!position_.doMove(pseudo[index], probe)) continue;
+            if (!position_.doMove(pseudo[index], probe, false)) continue;
             position_.undoMove(pseudo[index]);
             return pseudo[index];
         }
@@ -793,7 +793,7 @@ private:
         generateMoves(position_, pseudo, GenerationType::All);
         for (std::size_t index = 0; index < pseudo.size; ++index) {
             StateInfo probe;
-            if (!position_.doMove(pseudo[index], probe)) continue;
+            if (!position_.doMove(pseudo[index], probe, false)) continue;
             position_.undoMove(pseudo[index]);
             return true;
         }

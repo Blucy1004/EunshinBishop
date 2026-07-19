@@ -138,7 +138,7 @@ void generateLegalMoves(Position& position, MoveList& list) noexcept {
     for (std::size_t i = 0; i < pseudo.size; ++i) {
         StateInfo next;
         const Move move = pseudo[i];
-        if (!position.doMove(move, next)) continue;
+        if (!position.doMove(move, next, false)) continue;
         position.undoMove(move);
         list.add(move);
     }
@@ -184,7 +184,7 @@ std::uint64_t perft(Position& position, Depth depth) noexcept {
     for (std::size_t i = 0; i < pseudo.size; ++i) {
         const Move move = pseudo[i];
         StateInfo next;
-        if (!position.doMove(move, next)) continue;
+        if (!position.doMove(move, next, false)) continue;
         nodes += perft(position, depth - 1);
         position.undoMove(move);
     }

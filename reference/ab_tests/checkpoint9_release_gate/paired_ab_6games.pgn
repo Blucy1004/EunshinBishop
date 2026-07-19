@@ -1,0 +1,84 @@
+[Event "Checkpoint9 Release Gate A/B"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "1"]
+[White "Q"]
+[Black "Reference"]
+[Result "0-1"]
+[TimeControl "movetime 50ms"]
+[FEN "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[Termination "CHECKMATE"]
+
+2. Nc3 Nc6 3. Nf3 Bc5 4. d4 exd4 5. Na4 Bb4+ 6. c3 dxc3 7. bxc3 Bd6 8. Be3 Nf6 9. Nc5 Qe7 10. e5 Nxe5 11. Nxe5 Bxe5 12. Qc2 Ng4 13. Ne4 Nxe3 14. fxe3 d5 15. Nf2 Qa3 16. Kd2 O-O 17. Bd3 g6 18. Rab1 a6 19. e4 Qc5 20. Kd1 Re8 21. Qa4 Rd8 22. Qc2 dxe4 23. Nxe4 Qe3 24. Nf6+ Bxf6 25. a3 Bg4+ 26. Qe2 Qxe2+ 27. Kc1 Bg5# 0-1
+
+[Event "Checkpoint9 Release Gate A/B"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "2"]
+[White "Reference"]
+[Black "Q"]
+[Result "1-0"]
+[TimeControl "movetime 50ms"]
+[FEN "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[Termination "CHECKMATE"]
+
+2. Nf3 Nc6 3. Nc3 Bc5 4. Nxe5 Nf6 5. f4 O-O 6. Bc4 Nxe5 7. fxe5 Nxe4 8. Qh5 Bf2+ 9. Kf1 Nxc3 10. dxc3 d5 11. exd6 Qf6 12. Qg5 Qxg5 13. Bxg5 Bb6 14. dxc7 Bxc7 15. Bd5 Re8 16. Re1 Rxe1+ 17. Kxe1 h6 18. Be3 Bb6 19. Bxb6 axb6 20. Rf1 Be6 21. Bxe6 fxe6 22. a3 Rf8 23. Rxf8+ Kxf8 24. Ke2 Ke7 25. Ke3 Kf6 26. Ke4 b5 27. g4 Kg5 28. Kf3 e5 29. Kg3 Kf6 30. h4 Ke6 31. Kf3 Kd5 32. g5 h5 33. g6 Ke6 34. Ke4 Kf6 35. b3 Ke6 36. c4 bxc4 37. bxc4 b6 38. a4 Kd6 39. Kf5 Kc5 40. Kxe5 Kxc4 41. Ke6 Kc3 42. Kf7 Kxc2 43. Kg8 b5 44. axb5 Kd2 45. b6 Ke2 46. b7 Kf3 47. b8=Q Kg4 48. Kxg7 Kxh4 49. Kf6 Kg4 50. g7 Kf3 51. g8=Q h4 52. Qd5+ Ke2 53. Qh2+ Ke1 54. Qdh1# 1-0
+
+[Event "Checkpoint9 Release Gate A/B"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "3"]
+[White "Q"]
+[Black "Reference"]
+[Result "0-1"]
+[TimeControl "movetime 50ms"]
+[FEN "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[Termination "CHECKMATE"]
+
+2. Nf3 Nf6 3. Nc3 Nc6 4. Bf4 e6 5. e3 Bb4 6. Bb5 Ne4 7. Bxc6+ bxc6 8. Qd3 a5 9. O-O Ba6 10. Qd1 Bxc3 11. bxc3 Nxc3 12. Qd2 Ne2+ 13. Kh1 Nxf4 14. exf4 Bxf1 15. Rxf1 Qd6 16. Rb1 O-O 17. Ne5 Rfb8 18. Qe1 c5 19. c3 cxd4 20. cxd4 Rxb1 21. Qxb1 Qb4 22. Qa1 Rb8 23. h3 Qb1+ 24. Qxb1 Rxb1+ 25. Kh2 Ra1 26. f5 exf5 27. Nc6 Rxa2 28. Kg3 Kf8 29. Kf3 Ke8 30. h4 f6 31. h5 Kd7 32. h6 gxh6 33. Nb8+ Kd6 34. Na6 Ra4 35. Nc5 Rxd4 36. Nb7+ Kc6 37. Nd8+ Kd7 38. Nf7 a4 39. Nxh6 a3 40. Nxf5 a2 41. Nxd4 a1=Q 42. Nf5 Qc3+ 43. Kg4 Qc2 44. Ne3 Qxf2 45. Nxd5 Qxg2+ 46. Kf5 Qxd5+ 47. Kxf6 h6 48. Kg6 Qg5+ 49. Kh7 c5 50. Kh8 Ke6 51. Kh7 Kf6 52. Kh8 Qg7# 0-1
+
+[Event "Checkpoint9 Release Gate A/B"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "4"]
+[White "Reference"]
+[Black "Q"]
+[Result "1-0"]
+[TimeControl "movetime 50ms"]
+[FEN "rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[Termination "CHECKMATE"]
+
+2. Nf3 Nf6 3. Nc3 Nc6 4. Ne5 Nxe5 5. dxe5 d4 6. Nb5 Ng4 7. Bf4 c5 8. e4 Be6 9. Be2 Qa5+ 10. Kf1 h5 11. h3 Bd7 12. Nxd4 cxd4 13. hxg4 Qb4 14. gxh5 Qxb2 15. Rb1 Qxa2 16. Rxb7 O-O-O 17. Rb4 Be6 18. Rxd4 Rxd4 19. Qxd4 Qb1+ 20. Bd1 Qb6 21. Qxb6 axb6 22. Be2 Kd7 23. Bb5+ Kc8 24. Be3 Kb7 25. Ke1 Bg4 26. Rh4 Be6 27. Kd2 f6 28. Bd4 Bf7 29. Be2 Kc7 30. Rh1 Be6 31. Rb1 fxe5 32. Bxe5+ Kc6 33. Bd4 Rh6 34. Rxb6+ Kc7 35. Rb1 Kc6 36. Rb8 Rh8 37. Bb5+ Kd6 38. Rb6+ Kc7 39. Rxe6 Rxh5 40. Be5+ Kd8 41. Ke3 Kc8 42. Bc6 Rh1 43. c4 Rc1 44. Bd5 Re1+ 45. Kf3 Rb1 46. Ra6 Rb3+ 47. Ke2 e6 48. Ra8+ Kd7 49. Ra7+ Ke8 50. Bc6+ Kd8 51. Rd7+ Kc8 52. Rf7 Bc5 53. Rxg7 Kd8 54. Bf6+ Kc8 55. Bd7+ Kb8 56. Be5+ Ka7 57. Bc8+ Kb6 58. Rb7+ Kc6 59. Rxb3 Bd6 60. Bf6 e5 61. Rb5 Kc7 62. Be6 Kc6 63. Bd5+ Kd7 64. Rb7+ Kc8 65. c5 Bxc5 66. Bxe5 Kd8 67. Be6 Ke8 68. Bf6 Bd6 69. Rd7 Be7 70. Rxe7+ Kf8 71. Rb7 Ke8 72. Rb8# 1-0
+
+[Event "Checkpoint9 Release Gate A/B"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "5"]
+[White "Q"]
+[Black "Reference"]
+[Result "0-1"]
+[TimeControl "movetime 50ms"]
+[FEN "rnbqkbnr/pppp1ppp/8/4p3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[Termination "CHECKMATE"]
+
+2. Nf3 e4 3. Nd4 Nf6 4. Nc3 Nc6 5. Nxc6 dxc6 6. d4 Bb4 7. Qb3 c5 8. dxc5 Bxc5 9. Qb5+ Nd7 10. Nxe4 a6 11. Qb3 O-O 12. Bg5 Be7 13. Bxe7 Qxe7 14. Qc2 Ne5 15. O-O-O Bf5 16. Rd5 c6 17. Rd4 Rfd8 18. e3 Rxd4 19. exd4 Qh4 20. f3 Qe1+ 21. Qd1 Qxd1+ 22. Kxd1 Rd8 23. Kd2 Bxe4 24. fxe4 Rxd4+ 25. Ke3 Rd1 26. b3 c5 27. Kf4 Ng6+ 28. Ke3 Ra1 29. a4 Rb1 30. Kd2 Rxb3 31. Be2 Rb4 32. a5 Nf4 33. Rd1 h6 34. Bf3 Nxg2 35. Bxg2 Rb2+ 36. Ke3 Rxg2 37. Rd8+ Kh7 38. Rd7 Rxh2 39. Rxf7 Rb2 40. Rc7 Rb3+ 41. Kf4 Kg6 42. Rxc5 Kf6 43. e5+ Ke6 44. Rd5 Rb4 45. Rd4 Ra4 46. Ke4 Ke7 47. c5 Rxd4+ 48. Kxd4 Ke6 49. Ke4 g5 50. Kd4 h5 51. Ke4 h4 52. Kf3 Kf5 53. Ke3 g4 54. Kd4 g3 55. Ke3 h3 56. c6 bxc6 57. e6 h2 58. e7 h1=Q 59. Kd2 Qd5+ 60. Ke1 Qe4+ 61. Kd2 Qxe7 62. Kd3 g2 63. Kd2 g1=Q 64. Kc2 Qec5+ 65. Kb2 Qgc1+ 66. Kb3 Q5c4# 0-1
+
+[Event "Checkpoint9 Release Gate A/B"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "6"]
+[White "Reference"]
+[Black "Q"]
+[Result "1-0"]
+[TimeControl "movetime 50ms"]
+[FEN "rnbqkbnr/pppp1ppp/8/4p3/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 0 2"]
+[SetUp "1"]
+[Termination "CHECKMATE"]
+
+2. Nc3 Nc6 3. Nf3 Nf6 4. d4 exd4 5. Nxd4 Bc5 6. Nxc6 dxc6 7. Qxd8+ Kxd8 8. e4 Re8 9. Bg5 Bg4 10. Be2 Bd7 11. Bxf6+ gxf6 12. O-O Bd4 13. Bd3 Bxc3 14. bxc3 Kc8 15. Rfe1 c5 16. Rad1 Kb8 17. Bc2 Be6 18. e5 f5 19. a3 Rg8 20. Rd2 Bxc4 21. Bxf5 h6 22. Rd7 h5 23. Re4 Be6 24. Bxe6 fxe6 25. Rf4 a6 26. Rff7 Rc8 27. Rfe7 h4 28. Rh7 Ka7 29. h3 Rh8 30. Rxc7 Rxh7 31. Rxh7 Kb6 32. Rxh4 Kc6 33. Rh7 b5 34. f4 Rd8 35. Ra7 a5 36. Ra6+ Kd5 37. Rxa5 Kc4 38. Ra6 Rd1+ 39. Kf2 Rc1 40. Rxe6 Rc2+ 41. Kf3 Rxc3+ 42. Ke4 Rd3 43. Rd6 Rg3 44. Rd2 Rxa3 45. f5 Rc3 46. f6 Rc1 47. f7 Rf1 48. e6 Re1+ 49. Kf3 Kc3 50. f8=Q Kxd2 51. Qd6+ Kc2 52. Qxc5+ Kd2 53. Qb4+ Kd1 54. e7 Rf1+ 55. Ke3 Re1+ 56. Qxe1+ Kxe1 57. e8=Q Kf1 58. Kf3 b4 59. Qe3 b3 60. Qf2# 1-0
+
