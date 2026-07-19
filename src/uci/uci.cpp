@@ -1,6 +1,7 @@
 #include "uci/uci.h"
 
 #include "core/move.h"
+#include "core/version.h"
 #include "engine/engine.h"
 #include "position/fen.h"
 #include "search/search.h"
@@ -28,8 +29,6 @@
 namespace Eunshin::UCI {
 namespace {
 
-constexpr std::string_view ENGINE_NAME = "EunshinBishop Phase 5 Q";
-constexpr std::string_view ENGINE_AUTHOR = "Blucy1004";
 constexpr int MAX_SUPPORTED_SEARCH_DEPTH = MAX_PLY - 8;
 
 [[nodiscard]] std::string lowerAscii(std::string_view text) {
@@ -219,8 +218,8 @@ private:
     }
 
     void printIdentityAndOptions() {
-        writeLine(std::string("id name ") + std::string(ENGINE_NAME));
-        writeLine(std::string("id author ") + std::string(ENGINE_AUTHOR));
+        writeLine("id name " + Version::idString());
+        writeLine(std::string("id author ") + std::string(Version::Author));
         writeLine("option name Hash type spin default 256 min 1 max 4096");
         writeLine("option name MoveOverhead type spin default 30 min 0 max 5000");
         writeLine("option name UseNNUE type check default true");
