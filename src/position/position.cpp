@@ -358,7 +358,13 @@ bool Position::doMove(Move move, StateInfo& newState) noexcept {
         captured = pieceOn(move.to());
     }
 
-    newState = StateInfo{};
+    // Every field below is assigned explicitly (checkers is assigned once
+    // this move is confirmed legal, further down); a preceding
+    // `newState = StateInfo{}` previously zero-initialized the ~2KB NNUE
+    // accumulator array here for no benefit, since the very next statement
+    // (the accumulator copy below) immediately overwrote it. Profiling
+    // (Checkpoint 8) showed that redundant zero-init dominated doMove's
+    // cost at perft-scale call volumes.
     newState.previous = oldState;
     newState.positionKey = oldState->positionKey;
     newState.pawnKey = oldState->pawnKey;
@@ -375,6 +381,7 @@ bool Position::doMove(Move move, StateInfo& newState) noexcept {
     newState.capturedPiece = captured;
     newState.capturedSquare = capturedSquare;
     newState.nullMove = false;
+    newState.checkers = EMPTY_BB;
     // Preserve the accepted checkpoint-2 state-transition contract. The
     // evaluator can update this copied storage incrementally from `previous`.
     newState.accumulator = oldState->accumulator;

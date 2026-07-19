@@ -5,40 +5,52 @@ is actually done, what is next" across sessions; `docs/CheckpointN_Report.md`
 files are the frozen, dated evidence each summary below points to. Update
 this file, not just the checkpoint reports, whenever the state changes.
 
-## TOP PRIORITY: release-blocking regression, root-caused but not fixed
+## TOP PRIORITY: one Checkpoint-7 finding fixed, one reframed -- neither fully closed
 
-`docs/Checkpoint6_Report.md`'s small-scale A/B test (v2.62 reference vs Q,
-24 games) found Q losing 21-1-2. This was escalated into a root-cause
-investigation (`docs/Checkpoint7_Report.md`) rather than accepted as an
-expected tuning gap. That investigation found and reproduced **two
-independent, concrete causes**, fixed **neither** (explicit instruction:
-find and reproduce before changing code):
+`docs/Checkpoint7_Report.md` found two independent, concrete causes behind
+the 21-1-2 regression from `docs/Checkpoint6_Report.md`. `docs/Checkpoint8_Report.md`
+addressed both, in the scope explicitly requested (perf fix + read-only
+NNUE audit, not a full re-match):
 
-1. **Move-generation/make-unmake throughput regression**: `perft 6` from
-   startpos produces the identical, correct node count on both engines
-   (119,060,324 -- not a correctness bug) but Q does it at ~6.8M nodes/sec
-   versus the reference's ~19.2M nodes/sec, a ~2.8x gap, present before
-   evaluation is ever called. This is the dominant cause -- it persists
-   with NNUE fully disabled (a 12-game classical-only isolation match still
-   went 9-0-3 to the reference).
-2. **NNUE residual-formula sign flip**: at canonical Kiwipete, classical
-   (+103 cp) and NNUE raw (-131 cp) are numerically identical between the
-   two engines, but Q's "classical + 100% residual" formula (per
-   specification item 14) flips the final sign (-28 cp) relative to the
-   reference's 35%-blend (+42 cp). `ResidualGuard` does not intervene
-   because its knee (400 cp at this phase) is well above this 131 cp
-   correction -- the guard is working as designed; the question this raises
-   (unanswered) is whether FIRST_NET v5's raw output is actually calibrated
-   as a small residual delta in the first place.
+1. **Move-generation/make-unmake throughput regression -- fixed, not fully
+   closed.** `Position::doMove` opened with a redundant
+   `newState = StateInfo{}` that zero-initialized a 2048-byte NNUE
+   accumulator array immediately before overwriting it with a real copy two
+   statements later -- every field of `StateInfo` was explicitly assigned
+   afterward regardless, making the zero-init pure waste. Removing it
+   (`src/position/position.cpp`) cut the gap from ~1.9-2.0x to ~1.3x
+   (perft 6 nps: reference ~14.8M, Q ~7.6M before -> ~11.5M after; node
+   count unchanged at 119,060,324, Release+Debug CTest and
+   `assert(isConsistent())` all pass). The remaining ~1.3x is not
+   decomposed yet -- see `docs/Checkpoint8_Report.md`'s "Remaining gap".
+2. **NNUE residual-formula "sign flip" -- reframed, not a bug in Q.** A
+   read-only audit of the FIRST_NET v5 training/conversion scripts
+   (`v5_residual_datafactory.py`, `sniper_bishop_firstnet_v5_residual_train.py`,
+   `convert_firstnet_v5_npz_to_snnue.py`, `README_V5_RESIDUAL.md`,
+   `SniperBishop_classical_batch.cpp`) proves the network's training target
+   is `stockfish_white_cp - classical_white_cp` -- a residual delta, not an
+   absolute score -- and that Q's "classical + 100% residual" formula is
+   exactly the documented, kit-mandated combination rule. The frozen
+   reference's 35%-blend has **no residual-mode code path at all**
+   (confirmed by grep on the reference source) -- it is applying the wrong
+   combination rule to this network, not a more-robust one. Checkpoint 7's
+   framing ("Q reverses the sign relative to the reference") should be read
+   as "the reference is the wrong baseline for this network," not "Q is
+   wrong." `ResidualScale`/`ResidualGuard`/blending were **not changed** --
+   this checkpoint proved the contract, it did not act on it.
 
-**Next session's first job is addressing these, not further release
-scaffolding.** See `docs/Checkpoint7_Report.md`'s "Recommended next steps"
-for where to start (profile `perft` to localize Finding 1's specific
-function; check whether a smaller `ResidualScale` or `Absolute` mode
-resolves Finding 2 across a larger FEN sample before concluding the
-residual premise itself is wrong). Do not run a full 200-game
-`docs/ABTesting.md` batch until both are addressed -- it will not produce a
-different conclusion at the current gap size.
+**Next session's first job**: decide whether/how to re-run a
+Checkpoint-6/7-style A/B match now that Finding 1 is partially fixed and
+Finding 2 is reframed (no code changed there yet, so a re-match would not
+show improvement from Finding 2 specifically -- only from Finding 1's
+throughput fix). See `docs/Checkpoint8_Report.md`'s "Remaining gap" and its
+NNUE section's "What this does not establish" for the concrete open
+threads (decompose the remaining ~1.3x perft gap; check FIRST_NET v5's
+*magnitude* calibration, not just its combination formula, across a larger
+FEN sample). Do not run a full 200-game `docs/ABTesting.md` batch before at
+least the perft gap is further decomposed or explicitly accepted as
+residual system noise -- 1.3x is much smaller than 2.8x but is not yet
+proven to be zero.
 
 ## Judgment (specification coverage)
 
@@ -100,26 +112,36 @@ fdfcbc6  src/engine/engine.{h,cpp}, src/uci/uci.cpp, docs/ABTesting.md,
          reference/ab_tests/checkpoint6_architecture_regression/** --
          MSVC re-verification, CI audit+fix, and the A/B test that found
          the regression above (evidence preserved before investigating)
-(uncommitted at time of writing -- commit before ending the session)
-         docs/Checkpoint7_Report.md, docs/{ABResults,Checkpoint6_Report,
+3af0c60  docs/Checkpoint7_Report.md, docs/{ABResults,Checkpoint6_Report,
          Build}.md updates, reference/ab_tests/checkpoint7_root_cause/** --
-         the root-cause investigation itself
+         the root-cause investigation itself (no source changes)
+(uncommitted at time of writing -- commit before ending the session)
+         CMakeLists.txt (/MT CRT-linkage flag-comparability fix),
+         src/position/position.cpp (removed the redundant StateInfo
+         zero-init in Position::doMove), docs/Checkpoint8_Report.md,
+         HANDOFF.md, reference/ab_tests/checkpoint8_perf/** -- the perft
+         throughput fix and the read-only NNUE contract audit
 ```
 
-## Test results (last full run, commit `fdfcbc6`; unchanged by checkpoints 6-7, which added no source changes)
+## Test results (last full run, this checkpoint's commit; Release+Debug re-verified after the `doMove` fix)
 
 Windows, MSVC 19.51.36248.0 x64, `Visual Studio 18 2026` generator:
 
 | Gate | Release | Debug |
 |---|---:|---:|
 | Compiler warnings | 0 | 0 |
-| Core test checks | 519,122 PASS | 519,122 PASS |
-| Integration test checks | 70 PASS | 70 PASS |
-| CTest | 2/2 PASS | 2/2 PASS |
+| CTest (`q_core_tests`, `q_integration_tests`) | 2/2 PASS | 2/2 PASS |
 
-Re-confirmed via a from-scratch clean rebuild in checkpoint 6 (same
-counts, different binary hashes -- MSVC output is not byte-reproducible
-across separate builds, see `docs/Checkpoint6_Report.md`).
+`tests/` was not modified this checkpoint, so per-check counts are
+unchanged from the 519,122 core / 70 integration checks recorded in
+checkpoint 6. Re-confirmed via a from-scratch clean rebuild (same counts,
+different binary hashes each time -- MSVC output is not byte-reproducible
+across separate builds even from identical source, see
+`docs/Checkpoint6_Report.md` and `docs/Checkpoint8_Report.md`). Debug is a
+meaningful re-check this checkpoint specifically: it exercises
+`assert(isConsistent())` after every `doMove`/`undoMove`, which would have
+caught any state-corruption introduced by removing the redundant
+`StateInfo` zero-init in `Position::doMove`.
 
 NNUE-enabled path was exercised, not silently skipped: `testDebugCommands`
 loads `networks/firstnet_v5_10b.snnue`
@@ -166,6 +188,21 @@ agreement.
   compiler-detection `TryCompile` step specifically (not the main build).
   Use a short path (e.g. `C:\something`) for any future isolated worktree
   builds.
+- **`wpr -start CPU` requires administrator privileges** and fails with
+  `0xc5585011` without them; not available in this environment. Checkpoint
+  8 used manual `std::chrono`-based instrumentation in a throwaway git
+  worktree instead (see `docs/Checkpoint8_Report.md`'s Method section) --
+  reuse that approach, not WPR, unless the session has elevation.
+- The reference's build manifest
+  (`reference/bin/EunshinBishop_v2.62_reference.exe.build.json`) is the
+  authoritative source for its exact compiler flags
+  (`/nologo /std:c++17 /EHsc /W4 /O2 /DNDEBUG`) -- check it before assuming
+  a flag mismatch when comparing performance or output against Q.
+- MSVC's default Release CRT linkage is dynamic (`/MD`); the frozen
+  reference uses static (`/MT`, confirmed via `dumpbin /dependents` --
+  imports only `KERNEL32.dll`). `CMakeLists.txt` now forces `/MT` to match
+  (`CMAKE_MSVC_RUNTIME_LIBRARY`) for flag comparability, though this alone
+  did not close checkpoint 8's throughput gap.
 
 ## Incomplete stages
 
@@ -188,23 +225,34 @@ agreement.
 
 ## Next starting point
 
-1. **Fix or scope-plan Checkpoint 7's Findings 1 and 3 first.** Do not
-   proceed to GCC/Clang builds, full-scale A/B batches, or further item-31
-   work before this. Concretely:
-   - Profile (not more A/B games) `perft` to localize the move-generation/
-     make-unmake throughput gap to a specific function or data structure.
-   - For the residual formula: check whether a smaller `ResidualScale` (or
-     `NNUEOutputMode=Absolute`) keeps Q's evaluation sign-consistent with
-     the reference's blend across a larger, systematic FEN sample -- not
-     just the two positions checked in checkpoint 7 -- before concluding
-     the residual premise itself (not just its scale) needs to change.
-2. Only after both are independently addressed: re-run
-   `docs/ABTesting.md`'s architecture-regression comparison at a larger
-   scale to measure what improved.
+1. **Decide next steps on the remaining Checkpoint 8 threads before
+   GCC/Clang builds, full-scale A/B batches, or further item-31 work.**
+   Concretely:
+   - The perft gap is down to ~1.3x (from ~1.9-2.0x) but not further
+     decomposed. `docs/Checkpoint8_Report.md`'s "Remaining gap" section
+     names concrete candidates (`popcount`-based material-key updates
+     inside `putPieceHashed`/`removePieceHashed`, `Position` value-copies
+     in `isLegal`/`snapshotForSearch`) that were inside the still-dominant
+     "rest of doMove" bucket but were not separately instrumented -- reuse
+     the same `std::chrono` worktree-instrumentation method (not WPR) to
+     go further, if the gap is judged worth closing further before a
+     re-match.
+   - The NNUE contract is now proven (residual delta, Q's formula is
+     correct per the training scripts) but its *calibration* is not --
+     check FIRST_NET v5's actual output magnitude/distribution across a
+     larger, systematic FEN sample (not just Kiwipete/startpos) before
+     concluding the current `ResidualScale`/`ResidualGuard` defaults are
+     well-tuned for it.
+2. Only after at least a decision is made on both: re-run
+   `docs/ABTesting.md`'s architecture-regression comparison to measure what
+   improved. Note the reference is not a valid baseline for judging Finding
+   2/NNUE correctness specifically (it has no residual-mode code path at
+   all, per `docs/Checkpoint8_Report.md`) -- a re-match will show whether Q
+   is more *competitive*, not whether Q's eval formula is "right"; that
+   question is already answered by the contract audit.
 3. GCC/Clang builds and full item-31 release work remain valuable but are
-   no longer the highest-priority next step -- they were superseded by the
-   regression above.
-4. If continuing item 23 instead of the regression: pick exactly one group
+   still not the highest-priority next step.
+4. If continuing item 23 instead: pick exactly one group
    from `docs/ClassicalEvalBacklog.md`'s priority list, add it behind its
    own experiment flag, and do not touch a second group in the same change.
 5. Do not push a `v*` tag or create a GitHub remote/release until the
