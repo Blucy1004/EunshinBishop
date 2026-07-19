@@ -1,0 +1,36 @@
+LICENSE -- NOT YET DECIDED
+
+This file is a placeholder, not a license grant. No license has been chosen
+for this repository yet.
+
+Specification item 31 explicitly requires that this decision not be made
+automatically: "Do not arbitrarily declare code with an uncertain license as
+MIT." No one has stated a license for the EunshinBishop Q source in this
+project's history, so none is declared here.
+
+Until this file is replaced with an actual license text, the default legal
+position is that all rights are reserved by the copyright holder(s), and
+nothing in this repository may be reused, redistributed, or relicensed by a
+third party.
+
+## Before the v5.0.0 release, the project owner must:
+
+1. Choose an outbound source-code license (common options include MIT,
+   Apache-2.0, and GPL-3.0 -- each has different implications for anyone
+   embedding this engine elsewhere, and none is assumed here).
+2. Decide, separately, the outbound license for the bundled FIRST_NET v5
+   network weights (`networks/firstnet_v5_10b.snnue`). Its training-data
+   provenance is recorded in `networks/PROVENANCE.md`, but that record is
+   explicit that the *training data*'s CC0 status does not by itself decide
+   the *trained weight file*'s outbound license -- that is still a separate,
+   undecided choice belonging to the owner.
+3. Confirm whether any third-party algorithmic ideas or code referenced
+   during development (see `CONTRIBUTING.md` and `docs/Migration.md`) carry
+   license obligations that must be preserved or disclosed alongside
+   whatever license is chosen for this repository.
+4. Replace this file with the actual chosen license text once decided, and
+   update `README.md`'s License section, `CHANGELOG.md`, and the release
+   packaging manifest (`docs/Build.md`) to match.
+
+See the pre-release checklist in `docs/Build.md` for where this blocks a
+public `v5.0.0` tag.

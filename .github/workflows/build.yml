@@ -1,0 +1,89 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Perft smoke test
+        shell: pwsh
+        run: |
+          & "build\Release\EunshinBishopQCoreTests.exe" | Tee-Object -Variable coreOutput
+          if ($LASTEXITCODE -ne 0) { throw "core tests failed" }
+          if (-not ($coreOutput -match "^PASS:")) { throw "missing PASS marker" }
+
+      - name: UCI smoke test
+        shell: pwsh
+        run: |
+          $lines = @("", "uci", "isready", "position startpos", "go depth 4", "quit")
+          $output = $lines -join "`n" | & "build\Release\EunshinBishop.exe"
+          $output | Select-String -Pattern "^uciok$" -Quiet
+          if (-not $?) { throw "missing uciok" }
+          $output | Select-String -Pattern "^bestmove " -Quiet
+          if (-not $?) { throw "missing bestmove" }
+
+      - name: No-network build sanity (UseNNUE=false must still start)
+        shell: pwsh
+        run: |
+          $lines = @("", "uci", "setoption name UseNNUE value false", "isready", "position startpos", "go depth 2", "quit")
+          $output = $lines -join "`n" | & "build\Release\EunshinBishop.exe"
+          $output | Select-String -Pattern "^bestmove " -Quiet
+          if (-not $?) { throw "engine failed to produce a bestmove with UseNNUE=false" }
+
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cc: gcc
+            cxx: g++
+          - compiler: clang
+            cc: clang
+            cxx: clang++
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Perft smoke test
+        run: ./build/EunshinBishopQCoreTests | grep -q '^PASS:'
+
+      - name: UCI smoke test
+        run: |
+          printf 'uci\nisready\nposition startpos\ngo depth 4\nquit\n' | ./build/EunshinBishop | tee /tmp/uci_smoke.log
+          grep -q '^uciok$' /tmp/uci_smoke.log
+          grep -q '^bestmove ' /tmp/uci_smoke.log
+
+      - name: No-network build sanity (UseNNUE=false must still start)
+        run: |
+          printf 'uci\nsetoption name UseNNUE value false\nisready\nposition startpos\ngo depth 2\nquit\n' \
+            | ./build/EunshinBishop | tee /tmp/uci_nonnue.log
+          grep -q '^bestmove ' /tmp/uci_nonnue.log

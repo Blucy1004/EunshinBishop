@@ -1,0 +1,95 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $stage = "package/EunshinBishop-${{ github.ref_name }}-windows-x64"
+          New-Item -ItemType Directory -Force -Path "$stage/networks" | Out-Null
+          Copy-Item "build\Release\EunshinBishop.exe" "$stage\EunshinBishop.exe"
+          Copy-Item "README.md" "$stage\README.txt"
+          Copy-Item "LICENSE" "$stage\LICENSE"
+          Copy-Item "networks\README.md" "$stage\networks\README.txt"
+          # The .snnue network is included only once its redistribution
+          # license is confirmed (see LICENSE, networks/PROVENANCE.md).
+          # Until then, users place their own copy per networks/README.md.
+          Compress-Archive -Path "$stage" -DestinationPath "EunshinBishop-${{ github.ref_name }}-windows-x64.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: EunshinBishop-${{ github.ref_name }}-windows-x64.zip
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Package
+        run: |
+          stage="package/EunshinBishop-${{ github.ref_name }}-linux-x64"
+          mkdir -p "$stage/networks"
+          cp build/EunshinBishop "$stage/EunshinBishop"
+          cp README.md "$stage/README.txt"
+          cp LICENSE "$stage/LICENSE"
+          cp networks/README.md "$stage/networks/README.txt"
+          tar -C package -czf "EunshinBishop-${{ github.ref_name }}-linux-x64.tar.gz" \
+            "EunshinBishop-${{ github.ref_name }}-linux-x64"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-package
+          path: EunshinBishop-${{ github.ref_name }}-linux-x64.tar.gz
+
+  publish:
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd assets
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-rc.') }}
+          files: |
+            assets/*.zip
+            assets/*.tar.gz
+            assets/SHA256SUMS.txt
