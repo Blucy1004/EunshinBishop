@@ -7,8 +7,10 @@
 #include "position/position.h"
 #include "search/aegis.h"
 #include "search/history.h"
+#include "search/limbo.h"
 #include "search/move_picker.h"
 #include "search/search_config.h"
+#include "search/see.h"
 #include "search/tt.h"
 #include "search/worker.h"
 
@@ -26,6 +28,9 @@ namespace {
 constexpr int MAX_ITERATIVE_DEPTH = MAX_PLY - 8;
 constexpr std::uint64_t CLOCK_CHECK_INTERVAL = 64;
 constexpr Value MATE_SCORE_THRESHOLD = MATE - MAX_PLY;
+// Plies before LIMBO may grant another verification extension along the
+// same line; see search/limbo.h for the full bounded-policy rationale.
+constexpr std::uint8_t LIMBO_COOLDOWN_PLIES = 6;
 
 struct NodeResult final {
     Value value = VALUE_NONE;
@@ -361,6 +366,18 @@ private:
                 ? pieceValue(move.promotionType()) - pieceValue(PieceType::Pawn)
                 : 0;
 
+            // Specification item 20: skip strictly losing captures before
+            // ever making them.  Independent of the delta-pruning margin
+            // above (which uses the frozen reference's cheap material
+            // estimate), this consults the strict pin/king-legality-aware
+            // SEE module and only ever narrows the tree when the caller has
+            // opted in; SEEPruning defaults to false until A/B evidence
+            // justifies flipping it.
+            if (!inCheck && capture && !move.isPromotion() &&
+                worker_.config().useSEEPruning &&
+                !See::seeGe(position_, move, 0))
+                continue;
+
             StateInfo& childState = worker_.stateAt(ply + 1);
             if (!position_.doMove(move, childState)) continue;
             updateAccumulator();
@@ -415,6 +432,15 @@ private:
         SearchStack& stack = worker_.stackAt(ply);
         stack = SearchStack{};
         stack.ply = ply;
+        // LIMBO's cooldown decays by one every ply along the current line so
+        // a verification extension cannot be granted again immediately; it
+        // is node-local state living in the per-ply SearchStack, so it must
+        // be threaded down explicitly from the parent slot.
+        if (ply > 0) {
+            const std::uint8_t parentCooldown = worker_.stackAt(ply - 1).limboCooldown;
+            stack.limboCooldown = parentCooldown > 0
+                ? static_cast<std::uint8_t>(parentCooldown - 1) : 0;
+        }
 
         if (!root) {
             if (position_.isFiftyMoveDraw() || position_.isRepetition())
@@ -547,6 +573,33 @@ private:
             if (recapture && depth >= 4 && ply < 80) extension = 1;
             if (quiet && kingRingMove && depth >= 5 && legal <= 10 && ply < 80)
                 extension = 1;
+
+            if (worker_.config().useLIMBO && extension == 0 && depth == 1) {
+                ++worker_.statistics().limboChecks;
+                if (stack.limboCooldown != 0) {
+                    ++worker_.statistics().limboSuppressedByCooldown;
+                } else {
+                    Limbo::FrontierContext context;
+                    context.depth = depth;
+                    context.moveIndex = legal;
+                    context.isRoot = root;
+                    context.aegisActiveHere =
+                        worker_.config().useAEGIS && aegis.unstable();
+                    context.timeLimited = timeManager_.timeLimited();
+                    context.elapsedMs = timeManager_.elapsedTimeMs();
+                    context.maximumMs = timeManager_.maximumTimeMs();
+                    context.completedIterations =
+                        timeManager_.stability().completedIterations;
+                    if (Limbo::shouldVerify(position_, stack, context)) {
+                        ++worker_.statistics().limboTriggers;
+                        extension = static_cast<int>(
+                            Limbo::verificationDepth(depth) - depth);
+                        stack.limboChain = 1;
+                        stack.limboCooldown = LIMBO_COOLDOWN_PLIES;
+                        ++worker_.statistics().limboExtensions;
+                    }
+                }
+            }
 
             NodeResult child;
             if (legal == 1) {

@@ -23,8 +23,10 @@ add_library(eunshin_q_core STATIC
     src/position/position.cpp
     src/search/history.cpp
     src/search/aegis.cpp
+    src/search/limbo.cpp
     src/search/move_picker.cpp
     src/search/search.cpp
+    src/search/see.cpp
     src/search/time_manager.cpp
     src/search/tt.cpp
     src/search/worker.cpp

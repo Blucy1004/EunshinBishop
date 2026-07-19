@@ -154,12 +154,6 @@ bool Engine::setOption(std::string_view name,
     if (!candidate.set(name, value, error)) return false;
     if (candidate.revision == options_.revision) return true;
 
-    // These switches belong to later numbered checkpoints. Reject enabling
-    // them instead of accepting a silent no-op in a public UCI engine.
-    if (candidate.useSEEPruning)
-        return fail(error, "SEEPruning is not implemented in checkpoint 3");
-    if (candidate.useLIMBO)
-        return fail(error, "LIMBO is not implemented in checkpoint 3");
 
     const bool hashChanged = candidate.hashMegabytes != options_.hashMegabytes;
     const bool evalFileChanged = candidate.evalFile != options_.evalFile;

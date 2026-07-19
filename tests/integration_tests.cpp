@@ -514,9 +514,16 @@ void testSearchAndEngine(const std::string& networkPath) {
                engine.nnueLoaded(),
            "Engine can recover from fallback by loading a valid network");
 
-    expect(!engine.setOption("SEEPruning", "true", &error) &&
-               !engine.setOption("LIMBO", "true", &error),
-           "later SEE/LIMBO switches are explicitly rejected, not silent no-ops");
+    expect(engine.setOption("SEEPruning", "true", &error) &&
+               engine.setOption("LIMBO", "true", &error),
+           "specification items 19/20 are implemented: SEEPruning and LIMBO "
+           "accept true instead of being rejected");
+    const SearchResult limboSeeResult = engine.go(classicalDepth);
+    expect(legalPv(engine.position(), limboSeeResult),
+           "a search with SEEPruning and LIMBO enabled still returns a legal PV");
+    expect(engine.setOption("SEEPruning", "false", &error) &&
+               engine.setOption("LIMBO", "false", &error),
+           "SEEPruning and LIMBO can be disabled again");
 }
 
 void testUciProtocol() {

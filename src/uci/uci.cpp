@@ -231,6 +231,8 @@ private:
         writeLine("option name AbsoluteBlend type spin default 35 min 0 max 100");
         writeLine("option name IIR type check default false");
         writeLine("option name AEGIS type check default false");
+        writeLine("option name SEEPruning type check default false");
+        writeLine("option name LIMBO type check default false");
         reportNNUEFallbackIfNeeded();
         writeLine("uciok");
     }

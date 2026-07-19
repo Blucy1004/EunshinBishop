@@ -12,6 +12,7 @@
 #include "search/history.h"
 #include "search/move_picker.h"
 #include "search/search_stack.h"
+#include "search/see.h"
 #include "search/tt.h"
 #include "search/worker.h"
 
@@ -1065,6 +1066,55 @@ void testMovePicker() {
            "evasion picker returns every legal check evasion");
 }
 
+void testSee() {
+    Position position;
+    StateInfo root;
+
+    // Undefended pawn: queen simply wins it.
+    expect(load(position, root, "4k3/8/8/3p4/8/8/8/3QK3 w - - 0 1"),
+           "load SEE undefended-pawn FEN");
+    expect(See::see(position, moveFromUci(position, "d1d5")) == 100,
+           "SEE of an undefended pawn capture is +100");
+    expect(See::seeGe(position, moveFromUci(position, "d1d5"), 100),
+           "seeGe accepts the exact threshold");
+    expect(!See::seeGe(position, moveFromUci(position, "d1d5"), 101),
+           "seeGe rejects a threshold above the true value");
+
+    // Pawn-defended pawn: the queen is recaptured and the trade loses material.
+    expect(load(position, root, "4k3/8/2p1p3/3p4/8/8/8/3QK3 w - - 0 1"),
+           "load SEE queen-loses FEN");
+    expect(See::see(position, moveFromUci(position, "d1d5")) == -800,
+           "SEE of a queen capturing a pawn defended by a pawn is -800");
+
+    // Equal pawn-for-pawn trade.
+    expect(load(position, root, "4k3/8/2p5/3p4/4P3/8/8/4K3 w - - 0 1"),
+           "load SEE equal-trade FEN");
+    expect(See::see(position, moveFromUci(position, "e4d5")) == 0,
+           "SEE of an equal pawn trade is 0");
+
+    // X-ray recapture sequence: a rear rook only becomes an attacker once the
+    // front rook it was blocking has moved onto the exchange square.
+    expect(load(position, root, "r3k3/8/r7/8/8/R7/8/R3K3 w - - 0 1"),
+           "load SEE x-ray FEN");
+    expect(See::see(position, moveFromUci(position, "a3a6")) == 500,
+           "SEE resolves an x-ray double-rook exchange to +500");
+
+    // Pinned "defender": the black knight on e5 is pinned to e8 by the rook
+    // on e1 and cannot legally recapture.  g6 is a square the knight would
+    // otherwise defend but that the black king (far away on e8) cannot reach,
+    // so a naive pin-unaware SEE would wrongly price in the knight recapture.
+    expect(load(position, root, "4k3/8/6p1/4n3/8/8/8/KQ2R3 w - - 0 1"),
+           "load SEE pinned-defender FEN");
+    expect(See::see(position, moveFromUci(position, "b1g6")) == 100,
+           "a pinned defender cannot recapture, so SEE stays +100");
+
+    // Promotion: capturing into a queen promotion adds the promotion bonus.
+    expect(load(position, root, "n6k/1P6/8/8/8/8/8/K7 w - - 0 1"),
+           "load SEE promotion FEN");
+    expect(See::see(position, moveFromUci(position, "b7a8q")) == 1120,
+           "SEE of an undefended promoting capture includes the promotion bonus");
+}
+
 void testEngineBoundary() {
     Engine engine;
     expect(engine.options().hashMegabytes == 256 && engine.options().useNNUE &&
@@ -1168,6 +1218,7 @@ int main() {
     testOptionsAndSearchState();
     testTranspositionTable();
     testMovePicker();
+    testSee();
     testEngineBoundary();
 
     if (failures != 0) {
