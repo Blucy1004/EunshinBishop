@@ -45,6 +45,37 @@ jobs:
           $output | Select-String -Pattern "^bestmove " -Quiet
           if (-not $?) { throw "engine failed to produce a bestmove with UseNNUE=false" }
 
+      # The steps above run with the committed networks/firstnet_v5_10b.snnue
+      # present, so they never exercise CMakeLists.txt's `if(EXISTS
+      # EUNSHIN_DEFAULT_NETWORK)` branch (which skips registering
+      # q_integration_tests and the network-copy commands entirely). That
+      # branch exists precisely because the network may not always be
+      # checked out (see LICENSE and networks/PROVENANCE.md), so it must be
+      # exercised by CI, not just documented. This reconfigures fresh into a
+      # separate directory with the network file genuinely absent from disk.
+      - name: Configure/build/test with the network file genuinely absent
+        shell: pwsh
+        run: |
+          $moved = "networks\firstnet_v5_10b.snnue.moved"
+          Move-Item "networks\firstnet_v5_10b.snnue" $moved
+          try {
+            cmake -S . -B build-nonetwork -A x64
+            cmake --build build-nonetwork --config Release --parallel
+            ctest --test-dir build-nonetwork -C Release --output-on-failure
+
+            $testList = ctest --test-dir build-nonetwork -C Release -N
+            if ($testList -match "q_integration_tests") {
+              throw "q_integration_tests must not be registered when the network file is absent"
+            }
+
+            $lines = @("", "uci", "isready", "position startpos", "go depth 2", "quit")
+            $output = $lines -join "`n" | & "build-nonetwork\Release\EunshinBishop.exe"
+            $output | Select-String -Pattern "^bestmove " -Quiet
+            if (-not $?) { throw "engine failed to produce a bestmove with no network file present" }
+          } finally {
+            Move-Item $moved "networks\firstnet_v5_10b.snnue" -Force
+          }
+
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -87,3 +118,25 @@ jobs:
           printf 'uci\nsetoption name UseNNUE value false\nisready\nposition startpos\ngo depth 2\nquit\n' \
             | ./build/EunshinBishop | tee /tmp/uci_nonnue.log
           grep -q '^bestmove ' /tmp/uci_nonnue.log
+
+      # See the matching Windows step: the steps above never exercise
+      # CMakeLists.txt's `if(EXISTS EUNSHIN_DEFAULT_NETWORK)` branch because
+      # the network file is present in the checkout. Reconfigure fresh with
+      # it genuinely absent from disk.
+      - name: Configure/build/test with the network file genuinely absent
+        run: |
+          mv networks/firstnet_v5_10b.snnue networks/firstnet_v5_10b.snnue.moved
+          trap 'mv networks/firstnet_v5_10b.snnue.moved networks/firstnet_v5_10b.snnue' EXIT
+
+          cmake -S . -B build-nonetwork -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-nonetwork --parallel
+          ctest --test-dir build-nonetwork --output-on-failure
+
+          if ctest --test-dir build-nonetwork -N | grep -q q_integration_tests; then
+            echo "q_integration_tests must not be registered when the network file is absent" >&2
+            exit 1
+          fi
+
+          printf 'uci\nisready\nposition startpos\ngo depth 2\nquit\n' \
+            | ./build-nonetwork/EunshinBishop | tee /tmp/uci_nonetwork.log
+          grep -q '^bestmove ' /tmp/uci_nonetwork.log
