@@ -151,3 +151,36 @@ if(EXISTS "${EUNSHIN_DEFAULT_NETWORK}")
         VERBATIM
     )
 endif()
+
+
+# Browser/WebAssembly build. Search remains single-worker and is invoked from a
+# JavaScript Web Worker, so the main page never blocks and pthreads are not
+# required.
+if(EMSCRIPTEN)
+    add_executable(EunshinBishopWeb
+        src/web/wasm_api.cpp
+    )
+    target_link_libraries(EunshinBishopWeb PRIVATE eunshin_q_core)
+    target_compile_options(EunshinBishopWeb PRIVATE -O3)
+    set_target_properties(EunshinBishopWeb PROPERTIES
+        OUTPUT_NAME "eunshinbishop"
+        SUFFIX ".js"
+    )
+    target_link_options(EunshinBishopWeb PRIVATE
+        -O3
+        "SHELL:-s WASM=1"
+        "SHELL:-s MODULARIZE=1"
+        "SHELL:-s EXPORT_NAME=createEunshinBishopModule"
+        "SHELL:-s ENVIRONMENT=worker"
+        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+        "SHELL:-s INITIAL_MEMORY=134217728"
+        "SHELL:-s STACK_SIZE=16777216"
+        "SHELL:-s STACK_OVERFLOW_CHECK=2"
+        "SHELL:-s MAXIMUM_MEMORY=1073741824"
+        "SHELL:-s FILESYSTEM=1"
+        "SHELL:-s ASSERTIONS=1"
+        "SHELL:-s EXPORTED_FUNCTIONS=['_eunshin_init','_eunshin_search','_eunshin_evaluate','_eunshin_stop','_eunshin_version']"
+        "SHELL:-s EXPORTED_RUNTIME_METHODS=['UTF8ToString','ccall']"
+        "SHELL:--preload-file ${EUNSHIN_DEFAULT_NETWORK}@/firstnet_v5_10b.snnue"
+    )
+endif()
