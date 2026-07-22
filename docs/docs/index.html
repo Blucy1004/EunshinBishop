@@ -1,0 +1,480 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="EunshinBishop is a free and open-source UCI chess engine developed by Blucy1004."
+  >
+
+  <title>EunshinBishop — Open Source Chess Engine</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="background-grid" aria-hidden="true"></div>
+  <div class="bishop-line bishop-line-one" aria-hidden="true"></div>
+  <div class="bishop-line bishop-line-two" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="EunshinBishop home">
+      <span class="brand-symbol">♝</span>
+      <span>EunshinBishop</span>
+    </a>
+
+    <button
+      class="menu-button"
+      type="button"
+      aria-label="Open navigation"
+      aria-expanded="false"
+    >
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="#versions">Versions</a>
+      <a href="#features">Features</a>
+      <a href="#usage">Usage</a>
+      <a href="#roadmap">Roadmap</a>
+      <a
+        class="nav-github"
+        href="https://github.com/Blucy1004/EunshinBishop"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero section">
+      <div class="hero-copy reveal">
+        <div class="eyebrow">
+          <span class="status-dot"></span>
+          Open-source UCI chess engine
+        </div>
+
+        <h1>
+          Search beyond
+          <span>the obvious.</span>
+        </h1>
+
+        <p class="hero-description">
+          EunshinBishop is a modern chess engine focused on efficient search,
+          stable decision-making, and understandable architecture.
+        </p>
+
+        <div class="hero-actions">
+          <a
+            class="button button-primary"
+            href="https://github.com/Blucy1004/EunshinBishop/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Download EunshinBishop Q
+            <span aria-hidden="true">↗</span>
+          </a>
+
+          <a
+            class="button button-secondary"
+            href="https://github.com/Blucy1004/EunshinBishop"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View source
+          </a>
+          <a
+            class="button button-secondary"
+            href="play/"
+          >
+            Play in browser
+            <span aria-hidden="true">??/span>
+          </a>
+        </div>
+
+        <div class="hero-meta">
+          <span>UCI compatible</span>
+          <span>Windows x64</span>
+          <span>GPL-3.0-or-later</span>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="engine-card">
+          <div class="engine-card-header">
+            <span class="terminal-dots">
+              <i></i>
+              <i></i>
+              <i></i>
+            </span>
+
+            <span>eunshinbishop.exe</span>
+          </div>
+
+          <div class="terminal">
+            <p><span class="prompt">&gt;</span> uci</p>
+            <p><span class="muted">id name</span> EunshinBishop Q</p>
+            <p><span class="muted">id author</span> Blucy1004</p>
+            <p><span class="accent">uciok</span></p>
+            <p><span class="prompt">&gt;</span> isready</p>
+            <p><span class="accent">readyok</span></p>
+            <p class="terminal-cursor">
+              <span class="prompt">&gt;</span>
+              <span class="cursor"></span>
+            </p>
+          </div>
+
+          <div class="bishop-emblem">♝</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="versions" class="section">
+      <div class="section-heading reveal">
+        <span class="section-number">01</span>
+
+        <div>
+          <p class="section-label">Engine generations</p>
+          <h2>Built one move at a time.</h2>
+        </div>
+      </div>
+
+      <div class="version-grid">
+        <article class="version-card version-current reveal">
+          <div class="version-topline">
+            <span class="piece-icon">♛</span>
+            <span class="version-badge">Current stable</span>
+          </div>
+
+          <p class="version-name">EunshinBishop Q</p>
+
+          <h3>The completed Queen generation.</h3>
+
+          <p>
+            The current stable release of EunshinBishop, combining a classical
+            search foundation with NNUE-assisted evaluation and optional
+            instability-aware search systems.
+          </p>
+
+          <ul>
+            <li>Standard UCI engine interface</li>
+            <li>PVS and iterative deepening</li>
+            <li>NNUE residual evaluation support</li>
+            <li>Optional AEGIS and LIMBO systems</li>
+          </ul>
+
+          <a
+            class="text-link"
+            href="https://github.com/Blucy1004/EunshinBishop/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Get the latest release
+            <span>→</span>
+          </a>
+        </article>
+
+        <article class="version-card version-next reveal">
+          <div class="version-topline">
+            <span class="piece-icon">♞</span>
+            <span class="version-badge version-badge-next">In development</span>
+          </div>
+
+          <p class="version-name">EunshinBishop N</p>
+
+          <h3>The next Knight generation.</h3>
+
+          <p>
+            A next-generation search architecture centered on shared
+            instability signals, adaptive reductions, and more coordinated
+            selective search behavior.
+          </p>
+
+          <ul>
+            <li>Unified search stability telemetry</li>
+            <li>Adaptive LMR behavior</li>
+            <li>AEGIS and LIMBO integration</li>
+            <li>Correction history research</li>
+          </ul>
+
+          <span class="text-link text-link-disabled">
+            Development branch
+            <span>♞</span>
+          </span>
+        </article>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="section-heading reveal">
+        <span class="section-number">02</span>
+
+        <div>
+          <p class="section-label">Core systems</p>
+          <h2>Modern search. Clear structure.</h2>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card reveal">
+          <span class="feature-index">01</span>
+          <h3>Principal Variation Search</h3>
+          <p>
+            Alpha-beta search with PVS, iterative deepening, aspiration
+            windows, and transposition-table support.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <span class="feature-index">02</span>
+          <h3>Selective Search</h3>
+          <p>
+            Null-move pruning, late-move reductions, move ordering, internal
+            iterative reduction, and quiescence search.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <span class="feature-index">03</span>
+          <h3>NNUE Evaluation</h3>
+          <p>
+            Supports neural evaluation through a configurable NNUE network,
+            including residual and absolute output modes.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <span class="feature-index">04</span>
+          <h3>AEGIS</h3>
+          <p>
+            Adaptive Evaluation Guard for Instability in Search reduces
+            aggressive search reductions when a position appears unstable.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <span class="feature-index">05</span>
+          <h3>LIMBO</h3>
+          <p>
+            Localized Instability Monitor and Bounded Deepening Override adds
+            limited verification around unstable frontier nodes.
+          </p>
+        </article>
+
+        <article class="feature-card reveal">
+          <span class="feature-index">06</span>
+          <h3>Open Development</h3>
+          <p>
+            Source code, releases, documentation, and development history are
+            publicly available under the GNU GPL.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="usage" class="section usage-section">
+      <div class="usage-content reveal">
+        <p class="section-label">Using the engine</p>
+
+        <h2>
+          Bring your own
+          <span>chessboard.</span>
+        </h2>
+
+        <p>
+          EunshinBishop Q is a standard UCI engine. It does not include a
+          graphical chess interface, so it should be loaded into a compatible
+          chess GUI.
+        </p>
+
+        <div class="usage-notice">
+          <span class="notice-icon">i</span>
+
+          <p>
+            The optional <strong>EunshinBishop_play.exe</strong> is a legacy
+            standalone build based on EunshinBishop v2.62. It supports PGN
+            analysis and includes the final built-in play mode.
+          </p>
+        </div>
+      </div>
+
+      <div class="uci-panel reveal">
+        <div class="uci-panel-title">
+          <span>Basic setup</span>
+          <span class="uci-language">UCI</span>
+        </div>
+
+        <ol>
+          <li>
+            <span>01</span>
+            Download and extract the latest release.
+          </li>
+          <li>
+            <span>02</span>
+            Open a UCI-compatible chess GUI.
+          </li>
+          <li>
+            <span>03</span>
+            Add <code>EunshinBishop.exe</code> as a new engine.
+          </li>
+          <li>
+            <span>04</span>
+            Configure the NNUE file and optional search settings.
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="roadmap" class="section">
+      <div class="section-heading reveal">
+        <span class="section-number">03</span>
+
+        <div>
+          <p class="section-label">Development roadmap</p>
+          <h2>From Queen to Knight.</h2>
+        </div>
+      </div>
+
+      <div class="roadmap">
+        <div class="roadmap-item roadmap-complete reveal">
+          <div class="roadmap-marker"></div>
+
+          <div class="roadmap-content">
+            <span>Completed</span>
+            <h3>EunshinBishop Q</h3>
+            <p>
+              Stable modular UCI engine, NNUE integration, test infrastructure,
+              release packaging, and public source release.
+            </p>
+          </div>
+        </div>
+
+        <div class="roadmap-item roadmap-active reveal">
+          <div class="roadmap-marker"></div>
+
+          <div class="roadmap-content">
+            <span>Current research</span>
+            <h3>KNIGHT telemetry</h3>
+            <p>
+              Collecting unified stability and search-instability signals
+              without initially changing engine behavior.
+            </p>
+          </div>
+        </div>
+
+        <div class="roadmap-item reveal">
+          <div class="roadmap-marker"></div>
+
+          <div class="roadmap-content">
+            <span>Planned</span>
+            <h3>Adaptive search control</h3>
+            <p>
+              Coordinated LMR, AEGIS, LIMBO, aspiration, and verification
+              behavior driven by shared search context.
+            </p>
+          </div>
+        </div>
+
+        <div class="roadmap-item reveal">
+          <div class="roadmap-marker"></div>
+
+          <div class="roadmap-content">
+            <span>Future</span>
+            <h3>EunshinBishop N</h3>
+            <p>
+              Release of the Knight generation after controlled self-play,
+              regression testing, and architecture stabilization.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section final-cta reveal">
+      <div>
+        <p class="section-label">Free and open source</p>
+        <h2>Explore the engine.</h2>
+
+        <p>
+          Read the source, inspect the architecture, test a release, or follow
+          the development of EunshinBishop N.
+        </p>
+      </div>
+
+      <div class="final-actions">
+        <a
+          class="button button-primary"
+          href="https://github.com/Blucy1004/EunshinBishop"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open GitHub
+          <span>↗</span>
+        </a>
+
+        <a
+          class="button button-secondary"
+          href="https://github.com/Blucy1004/EunshinBishop/blob/main/LICENSE"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View license
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <a class="brand footer-brand" href="#top">
+        <span class="brand-symbol">♝</span>
+        <span>EunshinBishop</span>
+      </a>
+
+      <p>
+        Developed by <strong>Blucy1004</strong> with development assistance
+        from ChatGPT by OpenAI and Claude by Anthropic.
+      </p>
+    </div>
+
+    <div class="footer-links">
+      <a
+        href="https://github.com/Blucy1004/EunshinBishop"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GitHub
+      </a>
+
+      <a
+        href="https://github.com/Blucy1004/EunshinBishop/releases"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Releases
+      </a>
+
+      <a
+        href="https://github.com/Blucy1004/EunshinBishop/blob/main/LICENSE"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        GPL-3.0
+      </a>
+    </div>
+
+    <p class="copyright">
+      © <span id="current-year"></span> Blucy1004
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
