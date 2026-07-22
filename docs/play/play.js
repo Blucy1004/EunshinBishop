@@ -251,12 +251,24 @@ async function playHuman(candidate){
   setStatus(tr('reviewingMove'),tr('reviewingMove'));
   await nextPaint();
   setTimeout(async()=>{
-    const analysis=await engine.scorePlayedMove(before,move,{level:'normal',depth:7});
-    const after=new Chess(game.fen());
-    const evalAfter=positionEvalForPlayer(after);
-    reviews[reviewIndex]=makeReview(move,before,after,evalBefore,evalAfter,analysis);
-    renderMoves();
-    setTimeout(playEngine,Math.max(80,LEVELS[level].delay-180));
+    try{
+      const analysis=await engine.scorePlayedMove(before,move,{level:'normal',depth:6});
+      const after=new Chess(game.fen());
+      const evalAfter=positionEvalForPlayer(after);
+      reviews[reviewIndex]=makeReview(move,before,after,evalBefore,evalAfter,analysis);
+      renderMoves();
+    }catch(error){
+      console.error('Move review failed:',error);
+      reviews[reviewIndex]={
+        engine:false,move,classification:'good',pending:false,pv:[],
+        evalBefore,evalAfter:positionEvalForPlayer(game),loss:0,
+        explanation:`Review unavailable: ${error.message||error}`
+      };
+      renderMoves();
+      setStatus('Review unavailable','The game will continue without this move review.');
+    }finally{
+      setTimeout(playEngine,Math.max(80,LEVELS[level].delay-180));
+    }
   },0);
 }
 async function playEngine(){
@@ -266,14 +278,25 @@ async function playEngine(){
   setStatus(tr('thinking'),tr('searchingMoves'));
   await nextPaint();
   setTimeout(async()=>{
-    const result=await engine.search(game,{level});
-    const move=result.move?game.move(result.move):null;
-    if(move){lastMove=move;pendingAnimationMove={from:move.from,to:move.to};positionSnapshots.push(game.fen());reviews.push({engine:true,move,classification:'engine',pv:result.pv,evalAfter:positionEvalForPlayer(game)});}
-    $('#engine-thinking').classList.remove('active');
-    renderAll();
-    if(!finishIfNeeded()){
+    try{
+      const result=await engine.search(game,{level});
+      const move=result.move?game.move(result.move):null;
+      if(!move)throw new Error('The engine did not return a legal move.');
+      lastMove=move;
+      pendingAnimationMove={from:move.from,to:move.to};
+      positionSnapshots.push(game.fen());
+      reviews.push({engine:true,move,classification:'engine',pv:result.pv,evalAfter:positionEvalForPlayer(game)});
+      renderAll();
+      if(!finishIfNeeded()){
+        setAppState(GAME_STATE.PLAYER_TURN);
+        setStatus(tr('yourMove'),tr('choosePiece'));
+      }
+    }catch(error){
+      console.error('Engine move failed:',error);
       setAppState(GAME_STATE.PLAYER_TURN);
-      setStatus(tr('yourMove'),tr('choosePiece'));
+      setStatus('Engine error',error.message||String(error));
+    }finally{
+      $('#engine-thinking').classList.remove('active');
     }
   },40);
 }
