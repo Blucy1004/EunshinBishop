@@ -73,107 +73,7 @@ let dragState=null,suppressClickUntil=0;
 let reviews=[],positionSnapshots=[game.fen()];
 const $=s=>document.querySelector(s);
 
-class BrowserEngineAdapter{
-  evaluate(chess){
-    if(chess.in_checkmate()) return chess.turn()==='w'?-30000:30000;
-    let score=0;
-    const board=chess.board();
-    for(let r=0;r<8;r++)for(let f=0;f<8;f++){
-      const p=board[r][f];
-      if(!p)continue;
-      let v=VALUES[p.type];
-      if(PST[p.type]){
-        const idx=p.color==='w'?(7-r)*8+f:r*8+f;
-        v+=PST[p.type][idx];
-      }
-      score+=(p.color==='w'?v:-v);
-    }
-    const mobility=chess.moves().length;
-    score+=(chess.turn()==='w'?1:-1)*Math.min(mobility,35)*1.5;
-    return Math.round(score);
-  }
-  search(chess,opts={}){
-    const requestedLevel=opts.level||level;
-    const cfg=LEVELS[requestedLevel];
-    const depth=opts.depth??cfg.depth;
-    const rootColor=chess.turn();
-    const moves=this.ordered(chess.moves({verbose:true}));
-    const candidates=[];
-    for(const m of moves){
-      chess.move(m);
-      const scoreWhite=this.alphaBeta(chess,depth-1,-Infinity,Infinity);
-      chess.undo();
-      let scoreForRoot=rootColor==='w'?scoreWhite:-scoreWhite;
-      if(!opts.deterministic&&cfg.noise)scoreForRoot+=(Math.random()-.5)*cfg.noise;
-      candidates.push({move:m,score:scoreForRoot,scoreWhite});
-    }
-    candidates.sort((a,b)=>b.score-a.score);
-    let chosen=candidates[0]||null;
-    if(!opts.deterministic&&requestedLevel==='easy'&&candidates.length>2){
-      const pool=candidates.slice(0,Math.min(4,candidates.length));
-      chosen=pool[Math.floor(Math.random()*pool.length)];
-    }
-    return{
-      move:chosen?.move||null,
-      score:chosen?.score??0,
-      scoreWhite:chosen?.scoreWhite??this.evaluate(chess),
-      candidates,
-      pv:this.previewPv(chess,chosen?.move,2)
-    };
-  }
-  alphaBeta(chess,depth,alpha,beta){
-    if(depth<=0||chess.game_over())return this.evaluate(chess);
-    const maximizing=chess.turn()==='w';
-    let best=maximizing?-Infinity:Infinity;
-    const moves=this.ordered(chess.moves({verbose:true}));
-    for(const m of moves){
-      chess.move(m);
-      const score=this.alphaBeta(chess,depth-1,alpha,beta);
-      chess.undo();
-      if(maximizing){
-        best=Math.max(best,score);
-        alpha=Math.max(alpha,best);
-      }else{
-        best=Math.min(best,score);
-        beta=Math.min(beta,best);
-      }
-      if(alpha>=beta)break;
-    }
-    return best;
-  }
-  scorePlayedMove(before,move,opts={}){
-    const requestedLevel=opts.level||'normal';
-    const depth=opts.depth??Math.max(2,LEVELS[requestedLevel].depth);
-    const mover=before.turn();
-    const best=this.search(before,{level:requestedLevel,depth,deterministic:true});
-    const after=new Chess(before.fen());
-    const applied=after.move({from:move.from,to:move.to,promotion:move.promotion||'q'});
-    if(!applied)return{best,playedScore:-30000,loss:30000,reply:null,after};
-    const scoreWhite=this.alphaBeta(after,depth-1,-Infinity,Infinity);
-    const playedScore=mover==='w'?scoreWhite:-scoreWhite;
-    const reply=this.search(after,{level:requestedLevel,depth:Math.max(1,depth-1),deterministic:true});
-    return{best,playedScore,scoreWhite,loss:Math.max(0,best.score-playedScore),reply,after};
-  }
-  ordered(moves){
-    return moves.sort((a,b)=>(b.captured?VALUES[b.captured]:0)-(a.captured?VALUES[a.captured]:0)+(b.flags.includes('p')?800:0)-(a.flags.includes('p')?800:0));
-  }
-  previewPv(chess,first,plies){
-    if(!first)return[];
-    const clone=new Chess(chess.fen()),line=[];
-    let move=clone.move(first);
-    if(!move)return[];
-    line.push(move.san);
-    for(let i=1;i<plies;i++){
-      if(clone.game_over())break;
-      const result=this.search(clone,{level:'easy',deterministic:true});
-      if(!result.move)break;
-      move=clone.move(result.move);
-      line.push(move.san);
-    }
-    return line;
-  }
-}
-const engine=new BrowserEngineAdapter();
+const engine=new EunshinWasmAdapter();
 
 function boardSquares(){const files=orientation==='w'?['a','b','c','d','e','f','g','h']:['h','g','f','e','d','c','b','a'];const ranks=orientation==='w'?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];return ranks.flatMap(rank=>files.map(file=>file+rank));}
 function squareDelta(from,to){
@@ -350,8 +250,8 @@ async function playHuman(candidate){
   setAppState(GAME_STATE.REVIEWING);
   setStatus(tr('reviewingMove'),tr('reviewingMove'));
   await nextPaint();
-  setTimeout(()=>{
-    const analysis=engine.scorePlayedMove(before,move,{level:'normal',depth:3});
+  setTimeout(async()=>{
+    const analysis=await engine.scorePlayedMove(before,move,{level:'normal',depth:7});
     const after=new Chess(game.fen());
     const evalAfter=positionEvalForPlayer(after);
     reviews[reviewIndex]=makeReview(move,before,after,evalBefore,evalAfter,analysis);
@@ -365,8 +265,8 @@ async function playEngine(){
   $('#engine-thinking').classList.add('active');
   setStatus(tr('thinking'),tr('searchingMoves'));
   await nextPaint();
-  setTimeout(()=>{
-    const result=engine.search(game,{level});
+  setTimeout(async()=>{
+    const result=await engine.search(game,{level});
     const move=result.move?game.move(result.move):null;
     if(move){lastMove=move;pendingAnimationMove={from:move.from,to:move.to};positionSnapshots.push(game.fen());reviews.push({engine:true,move,classification:'engine',pv:result.pv,evalAfter:positionEvalForPlayer(game)});}
     $('#engine-thinking').classList.remove('active');
@@ -523,7 +423,26 @@ async function newGame(){
   },90);
 }
 function undoTurn(){if(![GAME_STATE.PLAYER_TURN,GAME_STATE.GAME_OVER].includes(appState))return;let undone=0;while(game.history().length&&undone<2){game.undo();reviews.pop();positionSnapshots.pop();undone++;}selected=null;legalTargets=[];lastMove=null;hintMove=null;pendingAnimationMove=null;renderAll();setAppState(GAME_STATE.PLAYER_TURN);setStatus('Turn undone','The previous player and engine moves were restored.');}
-async function requestHint(){if(!canUseBoard())return;setAppState(GAME_STATE.REVIEWING);setStatus(tr('hint'),tr('searchingMoves'));await nextPaint();const result=engine.search(game,{level:'normal'});if(!result.move)return;hintMove=result.move;$('#hint-box').hidden=false;$('#hint-move').textContent=result.move.san;const clone=new Chess(game.fen());clone.move(result.move);const reply=engine.search(clone,{level:'normal'});$('#hint-text').textContent=tr('expectedReply',{reply:reply.move?reply.move.san:'—'});renderBoard();setAppState(GAME_STATE.PLAYER_TURN);setStatus(tr('hintReady'),tr('hintReady'));}
+async function requestHint(){
+  if(!canUseBoard())return;
+  setAppState(GAME_STATE.REVIEWING);
+  setStatus(tr('hint'),tr('searchingMoves'));
+  await nextPaint();
+  try{
+    const result=await engine.search(game,{level:'normal'});
+    if(!result.move)return;
+    hintMove=result.move;
+    $('#hint-box').hidden=false;
+    $('#hint-move').textContent=result.move.san;
+    const reply=result.pv?.[1]||'—';
+    $('#hint-text').textContent=tr('expectedReply',{reply});
+    renderBoard();
+  }catch(error){
+    setStatus('Engine error',String(error.message||error));
+  }finally{
+    setAppState(GAME_STATE.PLAYER_TURN);
+  }
+}
 function resetPreGamePreview(){
   game.reset();reviews=[];positionSnapshots=[game.fen()];selected=null;legalTargets=[];lastMove=null;hintMove=null;pendingAnimationMove=null;
   rebuildBoardOrder();renderAll();
