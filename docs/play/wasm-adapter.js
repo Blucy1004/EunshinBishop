@@ -51,7 +51,13 @@ class EunshinWasmAdapter {
   async evaluateFen(fen) {
     await this.ready;
     const result = await this.request('evaluate', { fen }, 10000);
-    this.cachedEvalWhite = Number(result.score) || 0;
+
+    // The C++ evaluator reports from the side-to-move perspective (STM),
+    // not permanently from White's perspective. Normalise it here so every
+    // browser UI caller receives a stable White-POV score.
+    const rawStmScore = Number(result.score) || 0;
+    const sideToMove = String(fen).trim().split(/\s+/)[1];
+    this.cachedEvalWhite = sideToMove === 'b' ? -rawStmScore : rawStmScore;
     return this.cachedEvalWhite;
   }
 
@@ -104,29 +110,56 @@ class EunshinWasmAdapter {
   async scorePlayedMove(before, move, opts = {}) {
     const mover = before.turn();
 
-    // Review must never block the actual game for several full searches.
-    // One short best-move search plus a static evaluation of the resulting
-    // position is enough for the browser review classification.
+    // Search the position BEFORE the played move. This is the only valid
+    // place to ask what the best move was.
     const best = await this.search(before, {
       level: opts.level || 'normal',
       depth: Math.min(opts.depth || 6, 6),
-      moveTimeMs: 260
+      moveTimeMs: 240
     });
 
-    const after = new Chess(before.fen());
-    const applied = after.move({ from: move.from, to: move.to, promotion: move.promotion || 'q' });
-    if (!applied) return { best, playedScore: -30000, loss: 30000, reply: null, after };
+    if (!best?.move || !best?.raw?.bestmove) {
+      throw new Error('The engine did not return a best move for review.');
+    }
 
-    const afterWhite = await this.evaluateFen(after.fen());
-    const playedScore = mover === 'w' ? afterWhite : -afterWhite;
-    const bestScore = best.score || 0;
+    const after = new Chess(before.fen());
+    const applied = after.move({
+      from: move.from,
+      to: move.to,
+      promotion: move.promotion || 'q'
+    });
+    if (!applied) {
+      throw new Error('The played move could not be reconstructed for review.');
+    }
+
+    // A static evaluation cannot see that a hanging queen is captured on the
+    // very next move. Run one deliberately short reply search from the played
+    // position. Its score is from the opponent's perspective, so negate it to
+    // obtain the original mover's perspective.
+    const reply = await this.search(after, {
+      level: 'easy',
+      depth: 4,
+      moveTimeMs: 140
+    });
+
+    const playedScore = -(Number(reply.score) || 0);
+    const bestScore = Number(best.score) || 0;
+    const loss = Math.max(0, bestScore - playedScore);
+
+    const playedUci =
+      `${move.from}${move.to}${move.promotion && move.promotion !== 'q' ? move.promotion : ''}`
+        .toLowerCase();
+    const bestUci = String(best.raw.bestmove || '').toLowerCase();
+    const isBest = playedUci === bestUci ||
+      (move.promotion === 'q' && `${move.from}${move.to}q`.toLowerCase() === bestUci);
 
     return {
       best,
       playedScore,
-      scoreWhite: afterWhite,
-      loss: Math.max(0, bestScore - playedScore),
-      reply: null,
+      bestScore,
+      loss,
+      isBest,
+      reply,
       after
     };
   }

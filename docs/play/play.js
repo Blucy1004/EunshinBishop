@@ -306,12 +306,15 @@ function makeReview(move,before,after,evalBefore,evalAfter,analysis){
   const reply=analysis.reply;
   const replyMove=reply?.move||null;
 
-  let classification='best';
+  // Never award Best merely because the measured loss is small. The played
+  // move must actually match the engine's bestmove from the pre-move
+  // position. Search failure is handled as "review unavailable", not Best.
+  let classification='excellent';
   if(loss>250)classification='blunder';
   else if(loss>120)classification='mistake';
   else if(loss>60)classification='inaccuracy';
   else if(loss>25)classification='good';
-  else if(loss>10)classification='excellent';
+  else if(analysis.isBest)classification='best';
 
   const bestSan=best?.move?.san||null;
   const replySan=replyMove?.san||null;
